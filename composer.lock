@@ -1,0 +1,116 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
+    ],
+    "hash": "0087f0484015a405b3708c1db0c1e8da",
+    "packages": [
+        {
+            "name": "symfony/yaml",
+            "version": "v2.7.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/Yaml.git",
+                "reference": "4bfbe0ed3909bfddd75b70c094391ec1f142f860"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/Yaml/zipball/4bfbe0ed3909bfddd75b70c094391ec1f142f860",
+                "reference": "4bfbe0ed3909bfddd75b70c094391ec1f142f860",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.9"
+            },
+            "require-dev": {
+                "symfony/phpunit-bridge": "~2.7"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.7-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Symfony\\Component\\Yaml\\": ""
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Fabien Potencier",
+                    "email": "fabien@symfony.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony Yaml Component",
+            "homepage": "https://symfony.com",
+            "time": "2015-07-01 11:25:50"
+        },
+        {
+            "name": "zwilias/beanie",
+            "version": "v0.1.0-alpha",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/zwilias/beanie.git",
+                "reference": "1178164a7ff34423ba616f8c9c556a66f8a26111"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/zwilias/beanie/zipball/1178164a7ff34423ba616f8c9c556a66f8a26111",
+                "reference": "1178164a7ff34423ba616f8c9c556a66f8a26111",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.5.0",
+                "symfony/yaml": "^2.7"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.7.*",
+                "scrutinizer/ocular": "^1.1"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Beanie\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ilias Van Peer",
+                    "email": "ilias@idlemonkeys.net"
+                }
+            ],
+            "description": "A clean, lean PHP beanstalkd client library",
+            "homepage": "https://github.com/zwilias/beanie",
+            "keywords": [
+                "beanstalkd",
+                "queue",
+                "worker"
+            ],
+            "time": "2015-07-26 21:12:41"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "alpha",
+    "stability-flags": {
+        "zwilias/beanie": 15
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
+}
