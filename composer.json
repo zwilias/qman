@@ -2,9 +2,17 @@
   "minimum-stability": "alpha",
   "require": {
     "zwilias/beanie": "^0.1.0@alpha",
-    "jeremeamia/superclosure": "^2.1"
+    "jeremeamia/superclosure": "^2.1",
+    "psr/log": "^1.0"
   },
   "require-dev": {
+    "monolog/monolog": "^1.15",
+    "bramus/monolog-colored-line-formatter": "^2.0",
     "phpunit/phpunit": "^4.7"
+  },
+  "autoload": {
+    "psr-4": {
+      "QMan\\": "src/"
+    }
   }
 }
