@@ -7,11 +7,6 @@ namespace QMan;
 class WorkerConfig
 {
     /**
-     * Default: wait 10 seconds for beanstalk to provide us with something to do before checking for incoming signals
-     */
-    const DEFAULT_RESERVE_TIMEOUT = 10;
-
-    /**
      * Default: commit suicide whenever out memory usage reaches over 20MB
      */
     const DEFAULT_MAX_MEMORY_USAGE = 20000000;
@@ -27,9 +22,6 @@ class WorkerConfig
     const DEFAULT_TERMINATION_SIGNAL = SIGTERM;
 
     /** @var int */
-    private $reserveTimeout = self::DEFAULT_RESERVE_TIMEOUT;
-
-    /** @var int */
     private $maxMemoryUsage = self::DEFAULT_MAX_MEMORY_USAGE;
 
     /** @var int */
@@ -40,25 +32,6 @@ class WorkerConfig
 
     /** @var bool */
     private $locked = false;
-
-    /**
-     * @return int
-     */
-    public function getReserveTimeout()
-    {
-        return $this->reserveTimeout;
-    }
-
-    /**
-     * @param int $reserveTimeout
-     * @return WorkerConfig
-     */
-    public function setReserveTimeout($reserveTimeout)
-    {
-        $this->checkLock()->reserveTimeout = $reserveTimeout;
-
-        return $this;
-    }
 
     /**
      * @return int

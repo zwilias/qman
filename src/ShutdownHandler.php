@@ -111,7 +111,5 @@ class ShutdownHandler implements LoggerAwareInterface
         }
 
         $this->logger->info('Termination sequence complete. I\'ll be back.');
-
-        throw new ExitException();
     }
 }

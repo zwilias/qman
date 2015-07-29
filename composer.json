@@ -1,7 +1,7 @@
 {
   "minimum-stability": "alpha",
   "require": {
-    "zwilias/beanie": "^0.1.0@alpha",
+    "zwilias/beanie": "dev-master",
     "jeremeamia/superclosure": "^2.1",
     "psr/log": "^1.0"
   },
