@@ -202,12 +202,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/zwilias/beanie.git",
-                "reference": "26e5cc8c23146ba3e96701c476d9571c06b33ab7"
+                "reference": "64dc59fad6e0777e96792d5cdd3a4ee7c8c74d62"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/zwilias/beanie/zipball/26e5cc8c23146ba3e96701c476d9571c06b33ab7",
-                "reference": "26e5cc8c23146ba3e96701c476d9571c06b33ab7",
+                "url": "https://api.github.com/repos/zwilias/beanie/zipball/64dc59fad6e0777e96792d5cdd3a4ee7c8c74d62",
+                "reference": "64dc59fad6e0777e96792d5cdd3a4ee7c8c74d62",
                 "shasum": ""
             },
             "require": {
@@ -241,7 +241,7 @@
                 "queue",
                 "worker"
             ],
-            "time": "2015-07-29 20:35:57"
+            "time": "2015-07-30 15:50:32"
         }
     ],
     "packages-dev": [

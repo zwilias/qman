@@ -29,6 +29,9 @@ class Worker implements LoggerAwareInterface
     /** @var ShutdownHandler */
     protected $shutdownHandler;
 
+    /**
+     * @var \EvWatcher[]
+     */
     private $watchers = [];
 
     /**
@@ -61,22 +64,14 @@ class Worker implements LoggerAwareInterface
 
     private function listenForJobs(\Beanie\Worker $worker) {
         $jobOath = $worker->reserveOath();
-        //socket_set_nonblock($jobOath->getSocket());
 
         $this->logger->debug('Creating event watcher for socket');
 
-        return new \EvIo($jobOath->getSocket(), \Ev::READ, function ($watcher) use ($worker, $jobOath) {
+        return new \EvIo($jobOath->getSocket(), \Ev::READ, function (\EvWatcher $watcher) use ($worker, $jobOath) {
             $this->logger->debug('Incoming event for socket');
 
             try {
                 $this->handleJob($jobOath->invoke());
-            } catch (SocketException $socketException) {
-                if (in_array($socketException->getCode(), [
-                    (SOCKET_EAGAIN | SOCKET_EWOULDBLOCK),
-                    SOCKET_EINPROGRESS
-                ])) {
-                    return;
-                }
             } catch (Exception $ex) {
                 $this->logger->error($ex->getCode() . ': ' . $ex->getMessage());
                 $watcher->stop();
@@ -94,11 +89,17 @@ class Worker implements LoggerAwareInterface
         //$this->shutdownHandler->start();
         $workers = $this->beanie->workers();
 
-        $this->watchers[] = new \EvSignal($this->config->getTerminationSignal(), function ($watcher) {
+        $this->watchers[] = new \EvSignal($this->config->getTerminationSignal(), function () use ($workers) {
             $this->logger->debug('Incoming signal');
+
+            foreach ($workers as $worker) {
+                $worker->quit();
+            }
+
             foreach ($this->watchers as $watcher) {
                 $watcher->stop();
             }
+
             \Ev::stop(\Ev::BREAK_ALL);
             $this->shutdownHandler->handleShutdown();
         }, \Ev::MAXPRI);
