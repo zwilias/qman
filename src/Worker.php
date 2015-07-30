@@ -5,8 +5,6 @@ namespace QMan;
 
 
 use Beanie\Beanie;
-use Beanie\Exception\Exception;
-use Beanie\Exception\SocketException;
 use Beanie\Job\Job;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -26,19 +24,16 @@ class Worker implements LoggerAwareInterface
     /** @var WorkerConfig */
     protected $config;
 
-    /** @var ShutdownHandler */
-    protected $shutdownHandler;
+    /** @var EventLoop */
+    protected $eventLoop;
 
-    /**
-     * @var \EvWatcher[]
-     */
-    private $watchers = [];
+    private $startTime;
 
     /**
      * @param $serverName
      * @param Beanie $beanie
      * @param WorkerConfig|null $config
-     * @param ShutdownHandler|null $shutdownHandler
+     * @param EventLoop $eventLoop
      * @param LoggerInterface|null $logger
      * @throws \Exception
      */
@@ -46,7 +41,7 @@ class Worker implements LoggerAwareInterface
         $serverName,
         Beanie $beanie,
         WorkerConfig $config = null,
-        ShutdownHandler $shutdownHandler = null,
+        EventLoop $eventLoop = null,
         LoggerInterface $logger = null
     ) {
         if (!extension_loaded('ev')) {
@@ -55,74 +50,38 @@ class Worker implements LoggerAwareInterface
 
         $this->logger = $logger ?: new NullLogger();
         $this->config = $config ?: new WorkerConfig();
-        $this->shutdownHandler = $shutdownHandler ?: new ShutdownHandler($this->config, $this->logger);
+        $this->eventLoop = $eventLoop ?: new EventLoop($this->logger);
 
         $this->beanie = $beanie;
 
         $this->config->lock();
     }
 
-    private function listenForJobs(\Beanie\Worker $worker) {
-        $jobOath = $worker->reserveOath();
-
-        $this->logger->debug('Creating event watcher for socket');
-
-        return new \EvIo($jobOath->getSocket(), \Ev::READ, function (\EvWatcher $watcher) use ($worker, $jobOath) {
-            $this->logger->debug('Incoming event for socket');
-
-            try {
-                $this->handleJob($jobOath->invoke());
-            } catch (Exception $ex) {
-                $this->logger->error($ex->getCode() . ': ' . $ex->getMessage());
-                $watcher->stop();
-                return;
-            }
-
-            $watcher->stop();
-            array_push($this->watchers, $this->listenForJobs($worker));
-            array_splice($this->watchers, array_search($watcher, $this->watchers), 1);
-        }, [], \Ev::MINPRI);
-    }
-
     public function run()
     {
-        //$this->shutdownHandler->start();
         $workers = $this->beanie->workers();
+        $this->startTime = time();
 
-        $this->watchers[] = new \EvSignal($this->config->getTerminationSignal(), function () use ($workers) {
-            $this->logger->debug('Incoming signal');
+        array_map(function (\Beanie\Worker $worker) {
+            $this->eventLoop->registerJobListener($worker, [$this, 'handleJob']);
+        }, $workers);
 
-            foreach ($workers as $worker) {
-                $worker->quit();
-            }
+        $this->eventLoop
+            ->registerBreakCondition('Time to live', function () {
+                return (time() - $this->startTime) > $this->config->getMaxTimeAlive();
+            })
+            ->registerBreakCondition('Maximal memory usage', function () {
+                return memory_get_usage(true) > $this->config->getMaxMemoryUsage();
+            })
+            ->registerBreakSignal($this->config->getTerminationSignal());
 
-            foreach ($this->watchers as $watcher) {
-                $watcher->stop();
-            }
+        $this->eventLoop->run();
 
-            \Ev::stop(\Ev::BREAK_ALL);
-            $this->shutdownHandler->handleShutdown();
-        }, \Ev::MAXPRI);
+        array_map(function (\Beanie\Worker $worker) {
+            $worker->quit();
+        }, $workers);
 
-        $this->watchers[] = new \EvTimer(5, 5, function () {
-            $this->logger->debug('Still alive...');
-        });
-
-        foreach ($workers as $worker) {
-            $this->watchers[] = $this->listenForJobs($worker);
-        }
-
-        \Ev::run();
-
-        $this->logger->info('Broke out of event loop');
-    }
-
-    /**
-     * @return bool
-     */
-    protected function shouldLoop()
-    {
-        return true;
+        $this->logger->info('Termination sequence complete. I\'ll be back.');
     }
 
     /**
