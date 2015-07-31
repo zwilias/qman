@@ -22,6 +22,11 @@ class EventLoop implements LoggerAwareInterface
     protected $terminationSignals = [];
 
     /**
+     * @var callable[]
+     */
+    protected $breakConditions = [];
+
+    /**
      * @param LoggerInterface|null $logger
      * @throws \Exception
      */
@@ -84,13 +89,20 @@ class EventLoop implements LoggerAwareInterface
 
     public function registerBreakCondition($name, callable $condition)
     {
-        $this->registerWatcher(new \EvTimer(5, 5, function () use ($name, $condition) {
-            if ($condition() !== false) {
-                $this->logger->info('Noticed breaking condition: ' . $name);
-            } else {
-                $this->logger->debug('Checked ' . $name . ', nothing to see here.');
-            }
-        }));
+        $this->breakConditions[$name] = $condition;
+
+        if (count($this->breakConditions) === 1) {
+            $this->registerWatcher(new \EvTimer(0, 5, function () {
+                foreach ($this->breakConditions as $name => $condition) {
+                    if ($condition() !== false) {
+                        $this->logger->info('Noticed breaking condition: ' . $name);
+                        $this->stop();
+                    }
+                }
+
+                $this->logger->debug('Checked all break-conditions, nothing to see here.');
+            }));
+        }
 
         return $this;
     }
@@ -126,5 +138,13 @@ class EventLoop implements LoggerAwareInterface
         }
 
         \Ev::stop(\Ev::BREAK_ALL);
+    }
+
+    /**
+     * @return \EvWatcher[]
+     */
+    public function getWatchers()
+    {
+        return $this->watchers;
     }
 }

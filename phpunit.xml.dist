@@ -6,6 +6,12 @@
          convertWarningsToExceptions="true"
          bootstrap="vendor/autoload.php"
         >
+    <testsuites>
+        <testsuite name="QMan Test Suite">
+            <directory>./tests</directory>
+        </testsuite>
+    </testsuites>
+
     <filter>
         <whitelist>
             <directory>./src</directory>
