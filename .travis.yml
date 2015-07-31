@@ -9,10 +9,16 @@ matrix:
   allow_failures:
     - php: nightly
 
+before-install:
+  - pecl channel-update pecl.php.net
+  - composer self-update --no-interaction
+
 install:
   - yes "" | pecl install ev
-  - composer self-update --no-interaction
   - composer install --no-interaction
 
 before_script: mkdir -p build/logs
+
 script: vendor/bin/phpunit
+
+after_script: if [ $(phpenv version-name) = "5.6" ]; then php vendor/bin/ocular code-coverage:upload --format=php-clover build/logs/clover.xml; fi
