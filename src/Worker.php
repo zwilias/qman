@@ -67,10 +67,10 @@ class Worker implements LoggerAwareInterface
         }, $workers);
 
         $this->eventLoop
-            ->registerBreakCondition('Time to live', function () {
+            ->registerBreakCondition('time to live', function () {
                 return (time() - $this->startTime) > $this->config->getMaxTimeAlive();
             })
-            ->registerBreakCondition('Maximal memory usage', function () {
+            ->registerBreakCondition('maximal memory usage', function () {
                 return memory_get_usage(true) > $this->config->getMaxMemoryUsage();
             })
             ->registerBreakSignal($this->config->getTerminationSignal());
@@ -97,5 +97,4 @@ class Worker implements LoggerAwareInterface
 
         $job->release(Beanie::DEFAULT_PRIORITY, rand(5, 15));
     }
-
 }

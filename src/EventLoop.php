@@ -147,4 +147,13 @@ class EventLoop implements LoggerAwareInterface
     {
         return $this->watchers;
     }
+
+    public function __destruct()
+    {
+        foreach ($this->watchers as $watcher) {
+            $this->removeWatcher($watcher);
+
+            unset($watcher);
+        }
+    }
 }

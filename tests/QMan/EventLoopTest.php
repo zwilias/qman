@@ -7,6 +7,11 @@ namespace QMan;
 
 use Beanie\Job\JobOath;
 
+/**
+ * Class EventLoopTest
+ * @package QMan
+ * @covers \QMan\EventLoop
+ */
 class EventLoopTest extends \PHPUnit_Framework_TestCase
 {
     /**
@@ -170,11 +175,11 @@ class EventLoopTest extends \PHPUnit_Framework_TestCase
         $signalWatcher->invoke(\Ev::SIGNAL);
     }
 
-    public function testRun_startEventLoop()
+    public function testRun_startsEventLoop()
     {
         $iterations = \Ev::iteration();
 
-        (new EventLoop())->run(\Ev::RUN_ONCE);
+        (new EventLoop())->run(\Ev::RUN_NOWAIT);
 
         $this->assertThat(\Ev::iteration(), $this->greaterThan($iterations));
     }
@@ -191,7 +196,7 @@ class EventLoopTest extends \PHPUnit_Framework_TestCase
         array_map(function ($watcher) use ($eventLoop) {
             /** @var \PHPUnit_Framework_MockObject_MockObject|WatcherMock $watcher */
             $watcher
-                ->expects($this->once())
+                ->expects($this->atLeastOnce())
                 ->method('stop')
                 ->willReturn(true);
 
@@ -245,9 +250,6 @@ class EventLoopTest extends \PHPUnit_Framework_TestCase
         $this->assertInternalType('resource', $watcher->fd);
         $this->assertEquals(\Ev::READ, $watcher->events);
 
-        $eventLoop->removeWatcher($watcher);
-        unset($watcher);
-
         socket_close($socket);
     }
 
@@ -294,13 +296,6 @@ class EventLoopTest extends \PHPUnit_Framework_TestCase
         $watcher = $eventLoop->getWatchers()[0];
 
         $watcher->invoke(\Ev::READ);
-
-        foreach ($eventLoop->getWatchers() as $watcher) {
-            $watcher->stop();
-            $eventLoop->removeWatcher($watcher);
-            unset($watcher);
-        };
-
         socket_close($socket);
     }
 
@@ -348,13 +343,6 @@ class EventLoopTest extends \PHPUnit_Framework_TestCase
         $watcher = $eventLoop->getWatchers()[0];
 
         $watcher->invoke(\Ev::READ);
-
-        foreach ($eventLoop->getWatchers() as $watcher) {
-            $watcher->stop();
-            $eventLoop->removeWatcher($watcher);
-            unset($watcher);
-        }
-
         socket_close($socket);
     }
 
