@@ -9,7 +9,7 @@ matrix:
   allow_failures:
     - php: nightly
 
-before-install:
+before_install:
   - pecl channel-update pecl.php.net
   - composer self-update --no-interaction
 
