@@ -10,7 +10,7 @@ matrix:
     - php: nightly
 
 install:
-  - pecl install ev
+  - yes "" | pecl install ev
   - composer self-update --no-interaction
   - composer install --no-interaction
 
