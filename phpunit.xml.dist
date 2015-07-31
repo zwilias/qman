@@ -5,6 +5,9 @@
          convertNoticesToExceptions="true"
          convertWarningsToExceptions="true"
          bootstrap="vendor/autoload.php"
+         beStrictAboutTestsThatDoNotTestAnything="true"
+         beStrictAboutOutputDuringTests="true"
+         beStrictAboutTestSize="true"
         >
     <testsuites>
         <testsuite name="QMan Test Suite">

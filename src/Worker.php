@@ -15,9 +15,6 @@ class Worker implements LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
-    /** @var string */
-    protected $serverName;
-
     /** @var Beanie */
     protected $beanie;
 
@@ -30,7 +27,6 @@ class Worker implements LoggerAwareInterface
     private $startTime;
 
     /**
-     * @param $serverName
      * @param Beanie $beanie
      * @param WorkerConfig|null $config
      * @param EventLoop $eventLoop
@@ -38,7 +34,6 @@ class Worker implements LoggerAwareInterface
      * @throws \Exception
      */
     public function __construct(
-        $serverName,
         Beanie $beanie,
         WorkerConfig $config = null,
         EventLoop $eventLoop = null,

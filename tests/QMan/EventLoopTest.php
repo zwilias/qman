@@ -3,7 +3,7 @@
 
 namespace QMan;
 
-
+require_once 'NativeFunctionStub_TestCase.php';
 
 use Beanie\Job\JobOath;
 
@@ -12,14 +12,14 @@ use Beanie\Job\JobOath;
  * @package QMan
  * @covers \QMan\EventLoop
  */
-class EventLoopTest extends \PHPUnit_Framework_TestCase
+class EventLoopTest extends NativeFunctionStub_TestCase
 {
     /**
      * @expectedException \Exception
      */
     public function testConstruct_evExtensionNotLoaded_throwsException()
     {
-        $this->getNativeFunctionMock()
+        $this->getNativeFunctionMock(['extension_loaded'])
             ->expects($this->once())
             ->method('extension_loaded')
             ->with('ev')
@@ -286,6 +286,13 @@ class EventLoopTest extends \PHPUnit_Framework_TestCase
             ->method('reserveOath')
             ->willReturn($jobOathMock);
 
+        $this->getNativeFunctionMock(['pcntl_sigprocmask'])
+            ->expects($this->exactly(2))
+            ->method('pcntl_sigprocmask')
+            ->withConsecutive(
+                [SIG_BLOCK, []],
+                [SIG_UNBLOCK, []]
+            );
 
         $eventLoop = new EventLoop();
 
@@ -346,12 +353,6 @@ class EventLoopTest extends \PHPUnit_Framework_TestCase
         socket_close($socket);
     }
 
-    public function tearDown()
-    {
-        global $nativeFunctionMock;
-        $nativeFunctionMock = null;
-    }
-
     /**
      * @param array $extraMethods
      * @return \PHPUnit_Framework_MockObject_MockObject|WatcherMock
@@ -363,50 +364,9 @@ class EventLoopTest extends \PHPUnit_Framework_TestCase
             ->setMethods($extraMethods)
             ->getMock();
     }
-
-    /**
-     * @return \PHPUnit_Framework_MockObject_MockObject
-     */
-    protected function getNativeFunctionMock()
-    {
-        global $nativeFunctionMock, $mockedNativeFunctions;
-
-        if (! isset($nativeFunctionMock)) {
-            $nativeFunctionMock = $this
-                ->getMockBuilder('stdClass')
-                ->setMethods($mockedNativeFunctions)
-                ->getMock()
-            ;
-        }
-
-        return $nativeFunctionMock;
-    }
 }
 
 class WatcherMock extends \EvWatcher
 {
     public function __construct() {}
-}
-
-$nativeFunctionMock = null;
-$mockedNativeFunctions = [
-    'extension_loaded',
-    'pcntl_sigprocmask'
-];
-
-$namespace = __NAMESPACE__;
-
-foreach ($mockedNativeFunctions as $mockedFunction) {
-    eval(<<<EOD
-namespace {$namespace};
-
-function {$mockedFunction}()
-{
-    global \$nativeFunctionMock;
-    return is_callable([\$nativeFunctionMock, '{$mockedFunction}'])
-        ? call_user_func_array([\$nativeFunctionMock, '{$mockedFunction}'], func_get_args())
-        : call_user_func_array('{$mockedFunction}', func_get_args());
-}
-EOD
-    );
 }
