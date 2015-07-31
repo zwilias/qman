@@ -1,0 +1,18 @@
+language: php
+
+php:
+  - 5.5
+  - 5.6
+  - nightly
+
+matrix:
+  allow_failures:
+    - php: nightly
+
+install:
+  - pecl install ev
+  - composer self-update --no-interaction
+  - composer install --no-interaction
+
+before_script: mkdir -p build/logs
+script: vendor/bin/phpunit
