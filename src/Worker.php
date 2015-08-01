@@ -24,6 +24,7 @@ class Worker implements LoggerAwareInterface
     /** @var EventLoop */
     protected $eventLoop;
 
+    /** @var int */
     private $startTime;
 
     /**
@@ -60,12 +61,8 @@ class Worker implements LoggerAwareInterface
         }, $workers);
 
         $this->eventLoop
-            ->registerBreakCondition('time to live', function () {
-                return (time() - $this->startTime) > $this->config->getMaxTimeAlive();
-            })
-            ->registerBreakCondition('maximal memory usage', function () {
-                return memory_get_usage(true) > $this->config->getMaxMemoryUsage();
-            });
+            ->registerBreakCondition('time to live', [$this, 'checkTimeToLive'])
+            ->registerBreakCondition('maximal memory usage', [$this, 'checkMaximalMemoryUsage']);
 
         array_map(function ($terminationSignal) {
             $this->eventLoop->registerBreakSignal($terminationSignal);
@@ -84,6 +81,33 @@ class Worker implements LoggerAwareInterface
         $this->logger->info('Termination sequence complete. I\'ll be back.');
     }
 
+    /**
+     * @return int
+     */
+    protected function getStartTime()
+    {
+        return $this->startTime;
+    }
+
+    /**
+     * @return bool
+     */
+    public function checkTimeToLive()
+    {
+        return (time() - $this->getStartTime()) > $this->config->getMaxTimeAlive();
+    }
+
+    /**
+     * @return bool
+     */
+    public function checkMaximalMemoryUsage()
+    {
+        return memory_get_usage(true) > $this->config->getMaxMemoryUsage();
+    }
+
+    /**
+     * @param \Beanie\Worker $worker
+     */
     public function removedJobListenerCallback(\Beanie\Worker $worker)
     {
         $this->logger->notice('Scheduling reconnection', ['worker' => $worker]);

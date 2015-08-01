@@ -34,7 +34,9 @@ class NativeFunctionStub_TestCase extends \PHPUnit_Framework_TestCase
 
 $nativeFunctionMock = null;
 $mockedNativeFunctions = [
-    'pcntl_sigprocmask'
+    'pcntl_sigprocmask',
+    'time',
+    'memory_get_usage'
 ];
 
 $namespace = __NAMESPACE__;

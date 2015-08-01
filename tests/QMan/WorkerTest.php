@@ -135,4 +135,92 @@ class WorkerTest extends NativeFunctionStub_TestCase
         $worker = new Worker($beanieMock, null, $eventLoopMock);
         $worker->removedJobListenerCallback($beanieWorkerMock);
     }
+
+    public function testCheckTimeToLive_returnsTrueWhenLivingTooLong()
+    {
+        $startTime = time() - 1 - WorkerConfig::DEFAULT_MAX_TIME_ALIVE;
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
+        $beanieMock = $this
+            ->getMockBuilder(Beanie::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Worker $workerStub */
+        $workerStub = $this->getMockBuilder(Worker::class)
+            ->setMethods(['getStartTime'])
+            ->setConstructorArgs([$beanieMock])
+            ->getMock();
+
+        $workerStub
+            ->expects($this->once())
+            ->method('getStartTime')
+            ->willReturn($startTime);
+
+        $this->assertTrue($workerStub->checkTimeToLive());
+    }
+
+    public function testCheckTimeToLive_returnsFalseWhenNotLivingTooLong()
+    {
+        $startTime = time() - (WorkerConfig::DEFAULT_MAX_TIME_ALIVE / 2);
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
+        $beanieMock = $this
+            ->getMockBuilder(Beanie::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Worker $workerStub */
+        $workerStub = $this->getMockBuilder(Worker::class)
+            ->setMethods(['getStartTime'])
+            ->setConstructorArgs([$beanieMock])
+            ->getMock();
+
+        $workerStub
+            ->expects($this->once())
+            ->method('getStartTime')
+            ->willReturn($startTime);
+
+        $this->assertFalse($workerStub->checkTimeToLive());
+    }
+
+    public function testCheckMaximalMemoryUsage_returnsTrueWhenMemoryUsageExceedsLimits()
+    {
+        $this->getNativeFunctionMock(['memory_get_usage'])
+            ->expects($this->once())
+            ->method('memory_get_usage')
+            ->willReturn(WorkerConfig::DEFAULT_MAX_MEMORY_USAGE + 1);
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
+        $beanieMock = $this
+            ->getMockBuilder(Beanie::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+
+        $worker = new Worker($beanieMock);
+
+
+        $this->assertTrue($worker->checkMaximalMemoryUsage());
+    }
+
+    public function testCheckMaximalMemoryUsage_returnsFalseWhenMemoryUsageDoesNotExceedLimits()
+    {
+        $this->getNativeFunctionMock(['memory_get_usage'])
+            ->expects($this->once())
+            ->method('memory_get_usage')
+            ->willReturn(WorkerConfig::DEFAULT_MAX_MEMORY_USAGE - 1);
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
+        $beanieMock = $this
+            ->getMockBuilder(Beanie::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+
+        $worker = new Worker($beanieMock);
+
+
+        $this->assertFalse($worker->checkMaximalMemoryUsage());
+    }
 }
