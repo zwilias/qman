@@ -5,6 +5,7 @@ namespace QMan;
 
 require_once 'NativeFunctionStub_TestCase.php';
 
+use Beanie\Exception\SocketException;
 use Beanie\Job\JobOath;
 
 /**
@@ -241,6 +242,8 @@ class EventLoopTest extends NativeFunctionStub_TestCase
 
         $eventLoop->registerJobListener($workerMock, function () {
             $this->fail('Not supposed to get triggered');
+        }, function () {
+            $this->fail('Failure callback should not get triggered');
         });
 
         /** @var \EvIo $watcher */
@@ -253,7 +256,7 @@ class EventLoopTest extends NativeFunctionStub_TestCase
         socket_close($socket);
     }
 
-    public function testRegisterJobListener_triggerEvent_callsCallbackAndCreatesNewListener()
+    public function testRegisterJobListener_triggerEvent_callsCallback()
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
         $workerMock = $this
@@ -272,7 +275,7 @@ class EventLoopTest extends NativeFunctionStub_TestCase
             ->getMock();
 
         $jobOathMock
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('getSocket')
             ->willReturn($socket);
 
@@ -299,6 +302,8 @@ class EventLoopTest extends NativeFunctionStub_TestCase
 
         $eventLoop->registerJobListener($workerMock, function ($job) {
             $this->assertEquals('Job', $job);
+        }, function () {
+            $this->fail('This callback should not be called');
         });
         $watcher = $eventLoop->getWatchers()[0];
 
@@ -306,13 +311,13 @@ class EventLoopTest extends NativeFunctionStub_TestCase
         socket_close($socket);
     }
 
-    public function testRegisterJobListener_triggerEventCallbackThrowsException_callsCallbackAndCreatesNewListener()
+    public function testRegisterJobListener_triggerEventCallbackThrowsException_callsCallbackAndRemovesListener()
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
         $workerMock = $this
             ->getMockBuilder(\Beanie\Worker::class)
             ->disableOriginalConstructor()
-            ->setMethods(['reserveOath'])
+            ->setMethods(['reserveOath', 'disconnect'])
             ->getMock();
 
         $socket = socket_create_listen(0);
@@ -325,7 +330,7 @@ class EventLoopTest extends NativeFunctionStub_TestCase
             ->getMock();
 
         $jobOathMock
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('getSocket')
             ->willReturn($socket);
 
@@ -335,21 +340,33 @@ class EventLoopTest extends NativeFunctionStub_TestCase
             ->willReturn('Job');
 
         $workerMock
-            ->expects($this->exactly(2))
+            ->expects($this->once())
             ->method('reserveOath')
             ->willReturn($jobOathMock);
 
+        $workerMock
+            ->expects($this->once())
+            ->method('disconnect');
+
+        $callbackCalled = false;
 
         $eventLoop = new EventLoop();
 
 
         $eventLoop->registerJobListener($workerMock, function ($job) {
             $this->assertEquals('Job', $job);
-            throw new \RuntimeException('handle this');
+            throw new SocketException('handle this');
+        }, function () use (&$callbackCalled) {
+            $callbackCalled = true;
         });
         $watcher = $eventLoop->getWatchers()[0];
 
         $watcher->invoke(\Ev::READ);
+
+        if (!$callbackCalled) {
+            $this->fail('Callback had to be called');
+        }
+
         socket_close($socket);
     }
 

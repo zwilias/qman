@@ -17,7 +17,7 @@ class WorkerConfigTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(WorkerConfig::DEFAULT_MAX_MEMORY_USAGE, $config->getMaxMemoryUsage());
         $this->assertEquals(WorkerConfig::DEFAULT_MAX_TIME_ALIVE, $config->getMaxTimeAlive());
-        $this->assertEquals(WorkerConfig::DEFAULT_TERMINATION_SIGNAL, $config->getTerminationSignal());
+        $this->assertEquals([WorkerConfig::DEFAULT_TERMINATION_SIGNAL], $config->getTerminationSignals());
     }
 
     /**
@@ -69,7 +69,7 @@ class WorkerConfigTest extends \PHPUnit_Framework_TestCase
         return [
             ['maxMemoryUsage', 10],
             ['maxTimeAlive', 100],
-            ['terminationSignal', SIGUSR1]
+            ['terminationSignals', [SIGUSR1]]
         ];
     }
 }

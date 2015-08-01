@@ -28,7 +28,7 @@ class WorkerConfig
     private $maxTimeAlive = self::DEFAULT_MAX_TIME_ALIVE;
 
     /** @var int */
-    private $terminationSignal = self::DEFAULT_TERMINATION_SIGNAL;
+    private $terminationSignals = [self::DEFAULT_TERMINATION_SIGNAL];
 
     /** @var bool */
     private $locked = false;
@@ -72,20 +72,20 @@ class WorkerConfig
     }
 
     /**
-     * @return int
+     * @return int[]
      */
-    public function getTerminationSignal()
+    public function getTerminationSignals()
     {
-        return $this->terminationSignal;
+        return $this->terminationSignals;
     }
 
     /**
-     * @param int $terminationSignal
+     * @param int[] $terminationSignals
      * @return WorkerConfig
      */
-    public function setTerminationSignal($terminationSignal)
+    public function setTerminationSignals(array $terminationSignals)
     {
-        $this->checkLock()->terminationSignal = $terminationSignal;
+        $this->checkLock()->terminationSignals = $terminationSignals;
 
         return $this;
     }

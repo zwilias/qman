@@ -58,7 +58,9 @@ class Worker implements LoggerAwareInterface
         $this->startTime = time();
 
         array_map(function (\Beanie\Worker $worker) {
-            $this->eventLoop->registerJobListener($worker, [$this, 'handleJob']);
+            $this->eventLoop->registerJobListener(
+                $worker, [$this, 'handleJob'], [$this, 'removedJobListenerCallback']
+            );
         }, $workers);
 
         $this->eventLoop
@@ -67,16 +69,31 @@ class Worker implements LoggerAwareInterface
             })
             ->registerBreakCondition('maximal memory usage', function () {
                 return memory_get_usage(true) > $this->config->getMaxMemoryUsage();
-            })
-            ->registerBreakSignal($this->config->getTerminationSignal());
+            });
+
+        array_map(function ($terminationSignal) {
+            $this->eventLoop->registerBreakSignal($terminationSignal);
+        }, $this->config->getTerminationSignals());
 
         $this->eventLoop->run();
 
         array_map(function (\Beanie\Worker $worker) {
-            $worker->quit();
+            try {
+                $worker->quit();
+            } catch (\Exception $exception) {
+                $this->logger->warning('Failed to properly quit worker ' . $worker->getServer());
+            }
         }, $workers);
 
         $this->logger->info('Termination sequence complete. I\'ll be back.');
+    }
+
+    public function removedJobListenerCallback(\Beanie\Worker $worker, callable $receivedJobCallback)
+    {
+        $this->logger->notice('Scheduling reconnection', ['worker' => $worker]);
+        $this->eventLoop->scheduleReconnection(
+            3, 15, $worker, $receivedJobCallback, [$this, 'removedJobListenerCallback']
+        );
     }
 
     /**
@@ -88,8 +105,8 @@ class Worker implements LoggerAwareInterface
 
         sleep(2);
 
-        $this->logger->debug('releasing job');
+        $this->logger->debug('Deleting job');
 
-        $job->release(Beanie::DEFAULT_PRIORITY, rand(5, 15));
+        $job->delete();
     }
 }
