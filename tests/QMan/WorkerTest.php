@@ -99,10 +99,10 @@ class WorkerTest extends NativeFunctionStub_TestCase
             ->expects($this->exactly(count($workers)))
             ->method('registerJobListener')
             ->withConsecutive(
-                [$workers[0], $this->isType('callable')],
-                [$workers[1], $this->isType('callable')],
-                [$workers[2], $this->isType('callable')],
-                [$workers[3], $this->isType('callable')]
+                [$workers[0]],
+                [$workers[1]],
+                [$workers[2]],
+                [$workers[3]]
             );
 
         $eventLoopMock

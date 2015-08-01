@@ -7,6 +7,7 @@ require_once 'NativeFunctionStub_TestCase.php';
 
 use Beanie\Exception\SocketException;
 use Beanie\Job\JobOath;
+use Psr\Log\NullLogger;
 
 /**
  * Class EventLoopTest
@@ -240,11 +241,7 @@ class EventLoopTest extends NativeFunctionStub_TestCase
         $eventLoop = new EventLoop();
 
 
-        $eventLoop->registerJobListener($workerMock, function () {
-            $this->fail('Not supposed to get triggered');
-        }, function () {
-            $this->fail('Failure callback should not get triggered');
-        });
+        $eventLoop->registerJobListener($workerMock);
 
         /** @var \EvIo $watcher */
         $watcher = $eventLoop->getWatchers()[0];
@@ -297,14 +294,18 @@ class EventLoopTest extends NativeFunctionStub_TestCase
                 [SIG_UNBLOCK, []]
             );
 
-        $eventLoop = new EventLoop();
+        $eventLoop = new EventLoop(
+            new NullLogger(),
+            function ($job) {
+                $this->assertEquals('Job', $job);
+            },
+            function () {
+                $this->fail('This callback should not be called');
+            }
+        );
 
 
-        $eventLoop->registerJobListener($workerMock, function ($job) {
-            $this->assertEquals('Job', $job);
-        }, function () {
-            $this->fail('This callback should not be called');
-        });
+        $eventLoop->registerJobListener($workerMock);
         $watcher = $eventLoop->getWatchers()[0];
 
         $watcher->invoke(\Ev::READ);
@@ -350,15 +351,19 @@ class EventLoopTest extends NativeFunctionStub_TestCase
 
         $callbackCalled = false;
 
-        $eventLoop = new EventLoop();
+        $eventLoop = new EventLoop(
+            new NullLogger(),
+            function ($job) {
+                $this->assertEquals('Job', $job);
+                throw new SocketException('go');
+            },
+            function () use (&$callbackCalled) {
+                $callbackCalled = true;
+            }
+        );
 
 
-        $eventLoop->registerJobListener($workerMock, function ($job) {
-            $this->assertEquals('Job', $job);
-            throw new SocketException('handle this');
-        }, function () use (&$callbackCalled) {
-            $callbackCalled = true;
-        });
+        $eventLoop->registerJobListener($workerMock);
         $watcher = $eventLoop->getWatchers()[0];
 
         $watcher->invoke(\Ev::READ);

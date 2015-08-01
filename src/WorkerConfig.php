@@ -27,7 +27,7 @@ class WorkerConfig
     /** @var int */
     private $maxTimeAlive = self::DEFAULT_MAX_TIME_ALIVE;
 
-    /** @var int */
+    /** @var int[] */
     private $terminationSignals = [self::DEFAULT_TERMINATION_SIGNAL];
 
     /** @var bool */

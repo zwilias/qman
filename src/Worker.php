@@ -45,7 +45,9 @@ class Worker implements LoggerAwareInterface
 
         $this->logger = $logger ?: new NullLogger();
         $this->config = $config ?: new WorkerConfig();
-        $this->eventLoop = $eventLoop ?: new EventLoop($this->logger);
+        $this->eventLoop = $eventLoop ?: new EventLoop(
+            $this->logger, [$this, 'handleJob'], [$this, 'removedJobListenerCallback']
+        );
 
         $this->beanie = $beanie;
 
@@ -58,9 +60,7 @@ class Worker implements LoggerAwareInterface
         $this->startTime = time();
 
         array_map(function (\Beanie\Worker $worker) {
-            $this->eventLoop->registerJobListener(
-                $worker, [$this, 'handleJob'], [$this, 'removedJobListenerCallback']
-            );
+            $this->eventLoop->registerJobListener($worker);
         }, $workers);
 
         $this->eventLoop
@@ -88,11 +88,11 @@ class Worker implements LoggerAwareInterface
         $this->logger->info('Termination sequence complete. I\'ll be back.');
     }
 
-    public function removedJobListenerCallback(\Beanie\Worker $worker, callable $receivedJobCallback)
+    public function removedJobListenerCallback(\Beanie\Worker $worker)
     {
         $this->logger->notice('Scheduling reconnection', ['worker' => $worker]);
         $this->eventLoop->scheduleReconnection(
-            3, 15, $worker, $receivedJobCallback, [$this, 'removedJobListenerCallback']
+            3, 15, $worker
         );
     }
 

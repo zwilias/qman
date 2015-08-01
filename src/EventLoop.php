@@ -30,16 +30,33 @@ class EventLoop implements LoggerAwareInterface
     protected $breakConditions = [];
 
     /**
+     * @var callable
+     */
+    protected $jobReceivedCallback;
+
+    /**
+     * @var callable
+     */
+    protected $jobListenerRemovedCallback;
+
+    /**
      * @param LoggerInterface|null $logger
+     * @param callable $jobReceivedCallback
+     * @param callable $jobListenerRemovedCallback
      * @throws \Exception
      */
-    public function __construct(LoggerInterface $logger = null)
-    {
+    public function __construct(
+        LoggerInterface $logger = null,
+        callable $jobReceivedCallback = null,
+        callable $jobListenerRemovedCallback = null
+    ) {
         if (!extension_loaded('ev')) {
             throw new \Exception('Missing extension: ev');
         }
 
         $this->logger = $logger ?: new NullLogger();
+        $this->jobReceivedCallback = $jobReceivedCallback ?: function () {};
+        $this->jobListenerRemovedCallback = $jobListenerRemovedCallback ?: function () {};
     }
 
     /**
@@ -62,19 +79,18 @@ class EventLoop implements LoggerAwareInterface
         }
     }
 
-    public function registerJobListener(
-        BeanieWorker $worker, callable $receivedJobCallback, callable $removedListenerCallback
-    ) {
+    public function registerJobListener(BeanieWorker $worker)
+    {
         $this->logger->info('Registering job listener', ['worker' => $worker]);
         $jobOath = $worker->reserveOath();
 
         $this->registerWatcher(new \EvIo(
             $jobOath->getSocket(),
             \Ev::READ,
-            function (\EvWatcher $watcher) use ($worker, $jobOath, $receivedJobCallback, $removedListenerCallback) {
+            function (\EvWatcher $watcher) use ($worker, $jobOath) {
                 $this->logger->debug('Incoming socket event', ['worker' => $worker]);
 
-                $this->handleIncomingJob($watcher, $worker, $jobOath, $receivedJobCallback, $removedListenerCallback);
+                $this->handleIncomingJob($watcher, $worker, $jobOath);
             }
         ));
 
@@ -84,20 +100,18 @@ class EventLoop implements LoggerAwareInterface
     protected function handleIncomingJob(
         \EvWatcher $watcher,
         BeanieWorker $worker,
-        JobOath $jobOath,
-        callable $receivedJobCallback,
-        callable $removedListenerCallback
+        JobOath $jobOath
     ) {
         pcntl_sigprocmask(SIG_BLOCK, $this->terminationSignals);
 
         try {
             $job = $jobOath->invoke();
-            $receivedJobCallback($job);
+            call_user_func($this->jobReceivedCallback, $job);
         } catch (SocketException $socketException) {
             $this->logger->error($socketException->getCode() . ': ' . $socketException->getMessage());
             $this->removeWatcher($watcher);
 
-            $this->removeJobListener($worker, $receivedJobCallback, $removedListenerCallback);
+            $this->removeJobListener($worker);
 
             return;
         } catch (\Exception $exception) {
@@ -113,27 +127,27 @@ class EventLoop implements LoggerAwareInterface
     }
 
     public function removeJobListener(
-        BeanieWorker $worker, callable $receivedJobCallback, callable $removedListenerCallback
+        BeanieWorker $worker
     ) {
         $this->logger->alert('Removing job listener', ['worker' => $worker]);
 
         $worker->disconnect();
 
-        $removedListenerCallback($worker, $receivedJobCallback);
+        call_user_func($this->jobListenerRemovedCallback, $worker);
     }
 
     public function scheduleReconnection(
-        $after, $every, BeanieWorker $worker, callable $receivedJobCallback, callable $removedListenerCallback
+        $after, $every, BeanieWorker $worker
     ) {
         $this->registerWatcher(
             new \EvTimer($after, $every,
-                function (\EvWatcher $watcher) use ($worker, $receivedJobCallback, $removedListenerCallback) {
+                function (\EvWatcher $watcher) use ($worker) {
                     try {
                         $this->logger->info('Attempting reconnection', ['worker' => $worker]);
                         $worker->reconnect();
 
                         $this->removeWatcher($watcher);
-                        $this->registerJobListener($worker, $receivedJobCallback, $receivedJobCallback);
+                        $this->registerJobListener($worker);
                     } catch (SocketException $socketException) {
                         $this->logger->warning(
                             'Failed to reconnect',
