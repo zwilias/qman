@@ -138,49 +138,82 @@ class WorkerTest extends NativeFunctionStub_TestCase
 
     public function testCheckTimeToLive_returnsTrueWhenLivingTooLong()
     {
-        $startTime = time() - 1 - WorkerConfig::DEFAULT_MAX_TIME_ALIVE;
+        $this->getNativeFunctionMock(['time'])
+            ->expects($this->exactly(2))
+            ->method('time')
+            ->willReturnOnConsecutiveCalls(
+                (\time() - WorkerConfig::DEFAULT_MAX_TIME_ALIVE - 1),
+                (\time())
+            );
+
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
         $beanieMock = $this
             ->getMockBuilder(Beanie::class)
             ->disableOriginalConstructor()
+            ->setMethods(['workers'])
+            ->getMock();
+
+        $beanieMock
+            ->expects($this->once())
+            ->method('workers')
+            ->willReturn([]);
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|EventLoop $eventLoopMock */
+        $eventLoopMock = $this
+            ->getMockBuilder(EventLoop::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['run'])
             ->getMock();
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|Worker $workerStub */
         $workerStub = $this->getMockBuilder(Worker::class)
-            ->setMethods(['getStartTime'])
-            ->setConstructorArgs([$beanieMock])
+            ->setMethods(['registerWatchers', 'shutdown'])
+            ->setConstructorArgs([$beanieMock, null, $eventLoopMock])
             ->getMock();
 
-        $workerStub
-            ->expects($this->once())
-            ->method('getStartTime')
-            ->willReturn($startTime);
 
+        $workerStub->run();
         $this->assertTrue($workerStub->checkTimeToLive());
     }
 
     public function testCheckTimeToLive_returnsFalseWhenNotLivingTooLong()
     {
-        $startTime = time() - (WorkerConfig::DEFAULT_MAX_TIME_ALIVE / 2);
+        $this->getNativeFunctionMock(['time'])
+            ->expects($this->exactly(2))
+            ->method('time')
+            ->willReturnOnConsecutiveCalls(
+                (\time() - WorkerConfig::DEFAULT_MAX_TIME_ALIVE + 1),
+                (\time())
+            );
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
         $beanieMock = $this
             ->getMockBuilder(Beanie::class)
             ->disableOriginalConstructor()
+            ->setMethods(['workers'])
+            ->getMock();
+
+        $beanieMock
+            ->expects($this->once())
+            ->method('workers')
+            ->willReturn([]);
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|EventLoop $eventLoopMock */
+        $eventLoopMock = $this
+            ->getMockBuilder(EventLoop::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['run'])
             ->getMock();
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|Worker $workerStub */
         $workerStub = $this->getMockBuilder(Worker::class)
-            ->setMethods(['getStartTime'])
-            ->setConstructorArgs([$beanieMock])
+            ->setMethods(['registerWatchers', 'shutdown'])
+            ->setConstructorArgs([$beanieMock, null, $eventLoopMock])
             ->getMock();
 
-        $workerStub
-            ->expects($this->once())
-            ->method('getStartTime')
-            ->willReturn($startTime);
 
+        $workerStub->run();
         $this->assertFalse($workerStub->checkTimeToLive());
     }
 

@@ -53,40 +53,16 @@ class Worker implements LoggerAwareInterface
 
     public function run()
     {
-        $workers = $this->beanie->workers();
         $this->startTime = time();
+        $workers = $this->beanie->workers();
 
-        array_map(function (\Beanie\Worker $worker) {
-            $this->eventLoop->registerJobListener($worker);
-        }, $workers);
-
-        $this->eventLoop
-            ->registerBreakCondition('time to live', [$this, 'checkTimeToLive'])
-            ->registerBreakCondition('maximal memory usage', [$this, 'checkMaximalMemoryUsage']);
-
-        array_map(function ($terminationSignal) {
-            $this->eventLoop->registerBreakSignal($terminationSignal);
-        }, $this->config->getTerminationSignals());
+        $this->registerWatchers($workers);
 
         $this->eventLoop->run();
 
-        array_map(function (\Beanie\Worker $worker) {
-            try {
-                $worker->quit();
-            } catch (\Exception $exception) {
-                $this->logger->warning('Failed to properly quit worker', ['worker' => $worker]);
-            }
-        }, $workers);
+        $this->shutdown($workers);
 
         $this->logger->info('Termination sequence complete. I\'ll be back.');
-    }
-
-    /**
-     * @return int
-     */
-    protected function getStartTime()
-    {
-        return $this->startTime;
     }
 
     /**
@@ -94,7 +70,7 @@ class Worker implements LoggerAwareInterface
      */
     public function checkTimeToLive()
     {
-        return (time() - $this->getStartTime()) > $this->config->getMaxTimeAlive();
+        return (time() - $this->startTime) > $this->config->getMaxTimeAlive();
     }
 
     /**
@@ -128,5 +104,37 @@ class Worker implements LoggerAwareInterface
         $this->logger->debug('Deleting job');
 
         $job->delete();
+    }
+
+    /**
+     * @param $workers
+     */
+    protected function registerWatchers($workers)
+    {
+        array_map(function (\Beanie\Worker $worker) {
+            $this->eventLoop->registerJobListener($worker);
+        }, $workers);
+
+        $this->eventLoop
+            ->registerBreakCondition('time to live', [$this, 'checkTimeToLive'])
+            ->registerBreakCondition('maximal memory usage', [$this, 'checkMaximalMemoryUsage']);
+
+        array_map(function ($terminationSignal) {
+            $this->eventLoop->registerBreakSignal($terminationSignal);
+        }, $this->config->getTerminationSignals());
+    }
+
+    /**
+     * @param $workers
+     */
+    protected function shutdown($workers)
+    {
+        array_map(function (\Beanie\Worker $worker) {
+            try {
+                $worker->quit();
+            } catch (\Exception $exception) {
+                $this->logger->warning('Failed to properly quit worker', ['worker' => $worker]);
+            }
+        }, $workers);
     }
 }
