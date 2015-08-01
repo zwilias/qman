@@ -39,10 +39,6 @@ class Worker implements LoggerAwareInterface
         EventLoop $eventLoop = null,
         LoggerInterface $logger = null
     ) {
-        if (!extension_loaded('ev')) {
-            throw new \Exception('Missing extension: ev');
-        }
-
         $this->logger = $logger ?: new NullLogger();
         $this->config = $config ?: new WorkerConfig();
         $this->eventLoop = $eventLoop ?: new EventLoop(
@@ -81,7 +77,7 @@ class Worker implements LoggerAwareInterface
             try {
                 $worker->quit();
             } catch (\Exception $exception) {
-                $this->logger->warning('Failed to properly quit worker ' . $worker->getServer());
+                $this->logger->warning('Failed to properly quit worker', ['worker' => $worker]);
             }
         }, $workers);
 

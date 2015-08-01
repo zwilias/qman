@@ -50,10 +50,6 @@ class EventLoop implements LoggerAwareInterface
         callable $jobReceivedCallback = null,
         callable $jobListenerRemovedCallback = null
     ) {
-        if (!extension_loaded('ev')) {
-            throw new \Exception('Missing extension: ev');
-        }
-
         $this->logger = $logger ?: new NullLogger();
         $this->jobReceivedCallback = $jobReceivedCallback ?: function () {};
         $this->jobListenerRemovedCallback = $jobListenerRemovedCallback ?: function () {};

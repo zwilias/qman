@@ -34,7 +34,6 @@ class NativeFunctionStub_TestCase extends \PHPUnit_Framework_TestCase
 
 $nativeFunctionMock = null;
 $mockedNativeFunctions = [
-    'extension_loaded',
     'pcntl_sigprocmask'
 ];
 

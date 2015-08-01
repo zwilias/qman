@@ -17,20 +17,6 @@ use Beanie\Worker as BeanieWorker;
  */
 class EventLoopTest extends NativeFunctionStub_TestCase
 {
-    /**
-     * @expectedException \Exception
-     */
-    public function testConstruct_evExtensionNotLoaded_throwsException()
-    {
-        $this->getNativeFunctionMock(['extension_loaded'])
-            ->expects($this->once())
-            ->method('extension_loaded')
-            ->with('ev')
-            ->willReturn(false);
-
-        new EventLoop();
-    }
-
     public function testRegisterWatcher_savesWatcher()
     {
         $watcher = $this->getWatcherMock();

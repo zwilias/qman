@@ -35,26 +35,6 @@ class WorkerTest extends NativeFunctionStub_TestCase
         new Worker($beanieMock, $configMock);
     }
 
-    /**
-     * @expectedException \Exception
-     */
-    public function testConstruct_evExtensionNotLoaded_throwsException()
-    {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
-        $beanieMock = $this
-            ->getMockBuilder(Beanie::class)
-            ->disableOriginalConstructor()
-            ->getMock();
-
-        $this->getNativeFunctionMock(['extension_loaded'])
-            ->expects($this->once())
-            ->method('extension_loaded')
-            ->willReturn(false);
-
-
-        new Worker($beanieMock);
-    }
-
     public function testRun()
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
@@ -123,5 +103,36 @@ class WorkerTest extends NativeFunctionStub_TestCase
 
         $worker = new Worker($beanieMock, null, $eventLoopMock);
         $worker->run();
+    }
+
+    public function testRemovedJobListenerCallback_schedulesReconnection()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|EventLoop $eventLoopMock */
+        $eventLoopMock = $this
+            ->getMockBuilder(EventLoop::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['scheduleReconnection'])
+            ->getMock();
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
+        $beanieMock = $this
+            ->getMockBuilder(Beanie::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $beanieWorkerMock */
+        $beanieWorkerMock = $this
+            ->getMockBuilder(\Beanie\Worker::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $eventLoopMock
+            ->expects($this->once())
+            ->method('scheduleReconnection')
+            ->with($this->isType('int'), $this->isType('int'), $beanieWorkerMock);
+
+
+        $worker = new Worker($beanieMock, null, $eventLoopMock);
+        $worker->removedJobListenerCallback($beanieWorkerMock);
     }
 }
