@@ -79,6 +79,10 @@ class EventLoop implements LoggerAwareInterface
         }
     }
 
+    /**
+     * @param BeanieWorker $worker
+     * @return $this
+     */
     public function registerJobListener(BeanieWorker $worker)
     {
         $this->logger->info('Registering job listener', ['worker' => $worker]);
@@ -97,6 +101,11 @@ class EventLoop implements LoggerAwareInterface
         return $this;
     }
 
+    /**
+     * @param \EvWatcher $watcher
+     * @param BeanieWorker $worker
+     * @param JobOath $jobOath
+     */
     protected function handleIncomingJob(
         \EvWatcher $watcher,
         BeanieWorker $worker,
@@ -126,6 +135,9 @@ class EventLoop implements LoggerAwareInterface
         $worker->reserveOath();
     }
 
+    /**
+     * @param BeanieWorker $worker
+     */
     public function removeJobListener(
         BeanieWorker $worker
     ) {
@@ -136,52 +148,81 @@ class EventLoop implements LoggerAwareInterface
         call_user_func($this->jobListenerRemovedCallback, $worker);
     }
 
+    /**
+     * @param int $after
+     * @param int $every
+     * @param BeanieWorker $worker
+     */
     public function scheduleReconnection(
         $after, $every, BeanieWorker $worker
     ) {
         $this->registerWatcher(
-            new \EvTimer($after, $every,
-                function (\EvWatcher $watcher) use ($worker) {
-                    try {
-                        $this->logger->info('Attempting reconnection', ['worker' => $worker]);
-                        $worker->reconnect();
-
-                        $this->removeWatcher($watcher);
-                        $this->registerJobListener($worker);
-                    } catch (SocketException $socketException) {
-                        $this->logger->warning(
-                            'Failed to reconnect',
-                            ['worker' => $worker, 'exception' => $socketException]
-                        );
-                    }
-                }
-            )
+            new \EvTimer($after, $every, function (\EvWatcher $watcher) use ($worker) {
+                $this->attemptReconnection($watcher, $worker);
+            })
         );
     }
 
+    /**
+     * @param \EvWatcher $watcher
+     * @param BeanieWorker $worker
+     */
+    public function attemptReconnection(\EvWatcher $watcher, BeanieWorker $worker)
+    {
+        try {
+            $this->logger->info('Attempting reconnection', ['worker' => $worker]);
+            $worker->reconnect();
+
+            $this->removeWatcher($watcher);
+            $this->registerJobListener($worker);
+        } catch (SocketException $socketException) {
+            $this->logger->warning(
+                'Failed to reconnect',
+                ['worker' => $worker, 'exception' => $socketException]
+            );
+        }
+    }
+
+    /**
+     * @param string $name
+     * @param callable $condition
+     * @return $this
+     */
     public function registerBreakCondition($name, callable $condition)
     {
-        $this->breakConditions[$name] = $condition;
-
-        if (count($this->breakConditions) === 1) {
-            $this->registerWatcher(new \EvTimer(10, 10, function () {
-                foreach ($this->breakConditions as $name => $condition) {
-                    if ($condition() !== false) {
-                        $this->logger->info(
-                            'Noticed breaking condition',
-                            ['name' => $name, 'condition' => $condition]
-                        );
-                        $this->stop();
-                    }
-                }
-
-                $this->logger->debug('Checked all break-conditions');
-            }));
+        if (count($this->breakConditions) === 0) {
+            $this->setupBreakConditionTimerWatcher();
         }
+
+        $this->breakConditions[$name] = $condition;
 
         return $this;
     }
 
+    protected function setupBreakConditionTimerWatcher()
+    {
+        $this->registerWatcher(new \EvTimer(10, 10, [$this, 'checkBreakConditions']));
+    }
+
+    public function checkBreakConditions()
+    {
+        foreach ($this->breakConditions as $name => $condition) {
+            if ($condition() !== false) {
+                $this->logger->info(
+                    'Noticed breaking condition',
+                    ['name' => $name, 'condition' => $condition]
+                );
+                $this->stop();
+            }
+        }
+
+        $this->logger->debug('Checked all break-conditions');
+    }
+
+    /**
+     * @param int $signal
+     * @return $this
+     */
     public function registerBreakSignal($signal)
     {
         $this->terminationSignals[] = $signal;
@@ -197,6 +238,9 @@ class EventLoop implements LoggerAwareInterface
         return $this;
     }
 
+    /**
+     * @param int $mode
+     */
     public function run($mode = \Ev::FLAG_AUTO)
     {
         $this->logger->info('Starting event loop.');

@@ -8,6 +8,7 @@ require_once 'NativeFunctionStub_TestCase.php';
 use Beanie\Exception\SocketException;
 use Beanie\Job\JobOath;
 use Psr\Log\NullLogger;
+use Beanie\Worker as BeanieWorker;
 
 /**
  * Class EventLoopTest
@@ -213,7 +214,7 @@ class EventLoopTest extends NativeFunctionStub_TestCase
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
         $workerMock = $this
-            ->getMockBuilder(\Beanie\Worker::class)
+            ->getMockBuilder(BeanieWorker::class)
             ->disableOriginalConstructor()
             ->setMethods(['reserveOath'])
             ->getMock();
@@ -257,7 +258,7 @@ class EventLoopTest extends NativeFunctionStub_TestCase
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
         $workerMock = $this
-            ->getMockBuilder(\Beanie\Worker::class)
+            ->getMockBuilder(BeanieWorker::class)
             ->disableOriginalConstructor()
             ->setMethods(['reserveOath'])
             ->getMock();
@@ -312,11 +313,11 @@ class EventLoopTest extends NativeFunctionStub_TestCase
         socket_close($socket);
     }
 
-    public function testRegisterJobListener_triggerEventCallbackThrowsException_callsCallbackAndRemovesListener()
+    public function testRegisterJobListener_triggerEventCallbackThrowsSocketException_callsCallbackAndRemovesListener()
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
         $workerMock = $this
-            ->getMockBuilder(\Beanie\Worker::class)
+            ->getMockBuilder(BeanieWorker::class)
             ->disableOriginalConstructor()
             ->setMethods(['reserveOath', 'disconnect'])
             ->getMock();
@@ -373,6 +374,189 @@ class EventLoopTest extends NativeFunctionStub_TestCase
         }
 
         socket_close($socket);
+    }
+
+    public function testRegisterJobListener_triggerEventCallbackThrowsGenericException_callsCallback()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
+        $workerMock = $this
+            ->getMockBuilder(BeanieWorker::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['reserveOath'])
+            ->getMock();
+
+        $socket = socket_create_listen(0);
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|JobOath $jobOathMock */
+        $jobOathMock = $this
+            ->getMockBuilder(JobOath::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['getSocket', 'invoke'])
+            ->getMock();
+
+        $jobOathMock
+            ->expects($this->once())
+            ->method('getSocket')
+            ->willReturn($socket);
+
+        $jobOathMock
+            ->expects($this->once())
+            ->method('invoke')
+            ->willReturn('Job');
+
+        $workerMock
+            ->expects($this->once())
+            ->method('reserveOath')
+            ->willReturn($jobOathMock);
+
+
+        $eventLoop = new EventLoop(
+            new NullLogger(),
+            function ($job) {
+                $this->assertEquals('Job', $job);
+                throw new \RuntimeException('go');
+            },
+            function () {
+                $this->fail('should not get called');
+            }
+        );
+
+
+        $eventLoop->registerJobListener($workerMock);
+        $watcher = $eventLoop->getWatchers()[0];
+
+        $watcher->invoke(\Ev::READ);
+
+        socket_close($socket);
+    }
+
+    public function testDestructor_stopsAllWatchers()
+    {
+        $watchers = [];
+        $watchers[] = $this->getWatcherMock(['stop']);
+        $watchers[] = $this->getWatcherMock(['stop']);
+        $watchers[] = $this->getWatcherMock(['stop']);
+
+        $eventLoop = new EventLoop();
+
+        array_map(function ($watcher) use ($eventLoop) {
+            /** @var \PHPUnit_Framework_MockObject_MockObject|WatcherMock $watcher */
+            $watcher
+                ->expects($this->atLeastOnce())
+                ->method('stop')
+                ->willReturn(true);
+
+            $eventLoop->registerWatcher($watcher);
+        }, $watchers);
+
+
+        $eventLoop->__destruct();
+    }
+
+    public function testAttemptReconnection_successFulAttempt_removesWatcherCreatesJobListener()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|EventLoop $eventLoopStub */
+        $eventLoopStub = $this
+            ->getMockBuilder(EventLoop::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['removeWatcher', 'registerJobListener'])
+            ->getMock();
+
+        $eventLoopStub->setLogger(new NullLogger());
+
+        $watcher = $this->getWatcherMock();
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
+        $workerMock = $this
+            ->getMockBuilder(BeanieWorker::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['reconnect'])
+            ->getMock();
+
+        $eventLoopStub
+            ->expects($this->once())
+            ->method('removeWatcher')
+            ->with($watcher);
+
+        $eventLoopStub
+            ->expects($this->once())
+            ->method('registerJobListener')
+            ->with($workerMock);
+
+
+        $eventLoopStub->attemptReconnection($watcher, $workerMock);
+    }
+
+    public function testAttemptReconnection_exceptionOccurs_watcherNotRemoved_jobListenerNotCreated()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|EventLoop $eventLoopStub */
+        $eventLoopStub = $this
+            ->getMockBuilder(EventLoop::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['removeWatcher', 'registerJobListener'])
+            ->getMock();
+
+        $eventLoopStub->setLogger(new NullLogger());
+
+        $watcher = $this->getWatcherMock();
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
+        $workerMock = $this
+            ->getMockBuilder(BeanieWorker::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['reconnect'])
+            ->getMock();
+
+        $workerMock
+            ->expects($this->once())
+            ->method('reconnect')
+            ->willThrowException(new SocketException());
+
+        $eventLoopStub
+            ->expects($this->never())
+            ->method('removeWatcher');
+
+        $eventLoopStub
+            ->expects($this->never())
+            ->method('registerJobListener');
+
+
+        $eventLoopStub->attemptReconnection($watcher, $workerMock);
+    }
+
+    public function testScheduleReconnection_registersTimerWithCallback()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
+        $workerMock = $this
+            ->getMockBuilder(BeanieWorker::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|EventLoop $eventLoopStub */
+        $eventLoopStub = $this
+            ->getMockBuilder(EventLoop::class)
+            ->disableOriginalConstructor()
+            ->setMethods(['attemptReconnection'])
+            ->getMock();
+
+        $after = 5;
+        $every = 20;
+
+
+        $eventLoopStub->scheduleReconnection($after, $every, $workerMock);
+        $timerWatcher = $eventLoopStub->getWatchers()[0];
+
+
+        $this->assertInstanceOf(\EvTimer::class, $timerWatcher);
+        $this->assertAttributeEquals($after, 'remaining', $timerWatcher);
+        $this->assertAttributeEquals($every, 'repeat', $timerWatcher);
+
+        $eventLoopStub
+            ->expects($this->once())
+            ->method('attemptReconnection')
+            ->with($timerWatcher, $workerMock);
+
+        $timerWatcher->invoke(\Ev::TIMER);
     }
 
     /**
