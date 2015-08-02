@@ -4,7 +4,7 @@
 namespace QMan;
 
 
-class WorkerConfig
+class QManConfig
 {
     /**
      * Default: commit suicide whenever out memory usage reaches over 20MB
@@ -43,7 +43,7 @@ class WorkerConfig
 
     /**
      * @param int $maxMemoryUsage
-     * @return WorkerConfig
+     * @return QManConfig
      */
     public function setMaxMemoryUsage($maxMemoryUsage)
     {
@@ -62,7 +62,7 @@ class WorkerConfig
 
     /**
      * @param int $maxTimeAlive
-     * @return WorkerConfig
+     * @return QManConfig
      */
     public function setMaxTimeAlive($maxTimeAlive)
     {
@@ -81,7 +81,7 @@ class WorkerConfig
 
     /**
      * @param int[] $terminationSignals
-     * @return WorkerConfig
+     * @return QManConfig
      */
     public function setTerminationSignals(array $terminationSignals)
     {
@@ -91,7 +91,7 @@ class WorkerConfig
     }
 
     /**
-     * @return WorkerConfig
+     * @return QManConfig
      */
     public function lock()
     {
@@ -102,7 +102,7 @@ class WorkerConfig
 
     /**
      * @throws \BadMethodCallException When attempting to change a property after locking the config object down.
-     * @return WorkerConfig
+     * @return QManConfig
      */
     protected function checkLock()
     {

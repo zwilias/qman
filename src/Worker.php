@@ -5,7 +5,7 @@ namespace QMan;
 
 
 use Beanie\Beanie;
-use Beanie\Job\Job;
+use Beanie\Job\Job as BeanieJob;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -17,26 +17,46 @@ class Worker implements LoggerAwareInterface
     /** @var Beanie */
     protected $beanie;
 
-    /** @var WorkerConfig */
+    /** @var QManConfig */
     protected $config;
 
     /** @var EventLoop */
     protected $eventLoop;
 
+    /**
+     * @var CommandSerializer
+     */
+    protected $commandSerializer;
+
     /** @var int */
     private $startTime;
 
     /**
+     * @var JobFailureStrategy
+     */
+    protected $jobFailureStrategy;
+
+    /**
      * @param Beanie $beanie
-     * @param WorkerConfig $config
+     * @param QManConfig $config
      * @param EventLoop $eventLoop
+     * @param CommandSerializer $commandSerializer
+     * @param JobFailureStrategy $jobFailureStrategy
      * @param LoggerInterface $logger
      */
-    public function __construct(Beanie $beanie, WorkerConfig $config, EventLoop $eventLoop, LoggerInterface $logger)
-    {
+    public function __construct(
+        Beanie $beanie,
+        QManConfig $config,
+        EventLoop $eventLoop,
+        CommandSerializer $commandSerializer,
+        JobFailureStrategy $jobFailureStrategy,
+        LoggerInterface $logger
+    ) {
         $this->logger = $logger;
         $this->config = $config;
         $this->eventLoop = $eventLoop;
+        $this->commandSerializer = $commandSerializer;
+        $this->jobFailureStrategy = $jobFailureStrategy;
 
         $this->eventLoop->setJobListenerRemovedCallback([$this, 'removedJobListenerCallback']);
         $this->eventLoop->setJobReceivedCallback([$this, 'handleJob']);
@@ -44,6 +64,7 @@ class Worker implements LoggerAwareInterface
         $this->beanie = $beanie;
 
         $this->config->lock();
+        $this->jobFailureStrategy = $jobFailureStrategy;
     }
 
     public function run()
@@ -88,17 +109,34 @@ class Worker implements LoggerAwareInterface
     }
 
     /**
-     * @param Job $job
+     * @param BeanieJob $beanieJob
+     * @return Job
      */
-    public function handleJob(Job $job)
+    public function createJobFromBeanieJob(BeanieJob $beanieJob)
     {
-        $this->logger->info('Handling job: #' . $job->getId());
+        return new Job($beanieJob, $this->commandSerializer->unserialize($beanieJob->getData()));
+    }
 
-        sleep(2);
+    /**
+     * @param BeanieJob $beanieJob
+     */
+    public function handleJob(BeanieJob $beanieJob)
+    {
+        $job = $this->createJobFromBeanieJob($beanieJob);
 
-        $this->logger->debug('Deleting job');
+        $result = false;
 
-        $job->delete();
+        try {
+            $result = $job->execute();
+        } catch (\Exception $exception) {
+            $this->logger->critical('Job threw exception', ['job' => $job, 'exception' => $exception]);
+        }
+
+        if ($result === false) {
+            $this->jobFailureStrategy->handleFailedJob($job);
+        } else {
+            $job->delete();
+        }
     }
 
     /**

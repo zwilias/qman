@@ -7,6 +7,11 @@ namespace QMan;
 use Beanie\Beanie;
 use Psr\Log\NullLogger;
 
+/**
+ * Class WorkerBuilderTest
+ * @package QMan
+ * @covers \QMan\WorkerBuilder
+ */
 class WorkerBuilderTest extends \PHPUnit_Framework_TestCase
 {
     /** @var WorkerBuilder */
@@ -40,36 +45,68 @@ class WorkerBuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testBuild_withWorkerConfig()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|WorkerConfig $workerConfigMock */
-        $workerConfigMock = $this
-            ->getMockBuilder(WorkerConfig::class)
-            ->setMethods(['lock'])
-            ->getMock();
-
-        $workerConfigMock
-            ->expects($this->once())
-            ->method('lock');
+        $qManConfig = new QManConfig();
 
 
-        $worker = $this->workerBuilder->withWorkerConfig($workerConfigMock)->build($this->getBeanieMock());
+        $this->workerBuilder->withQManConfig($qManConfig);
 
 
-        $this->assertInstanceOf(Worker::class, $worker);
+        $this->assertContains($qManConfig, $this->workerBuilder->getConstructorArguments($this->getBeanieMock()));
     }
 
     public function testBuild_withLogger()
     {
-        $worker = $this->workerBuilder->withLogger(new NullLogger())->build($this->getBeanieMock());
+        $logger = new NullLogger();
 
 
-        $this->assertInstanceOf(Worker::class, $worker);
+        $this->workerBuilder->withLogger($logger);
+
+
+        $this->assertContains($logger, $this->workerBuilder->getConstructorArguments($this->getBeanieMock()));
     }
 
     public function testBuild_withEventLoop()
     {
-        $worker = $this->workerBuilder->withEventLoop(new EventLoop())->build($this->getBeanieMock());
+        $eventLoop = new EventLoop();
 
 
-        $this->assertInstanceOf(Worker::class, $worker);
+        $this->workerBuilder->withEventLoop($eventLoop);
+
+
+        $this->assertContains($eventLoop, $this->workerBuilder->getConstructorArguments($this->getBeanieMock()));
+    }
+
+    public function testBuild_withCommandSerializer()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandSerializer $commandSerializerMock */
+        $commandSerializerMock = $this
+            ->getMockBuilder(AbstractCommandSerializer::class)
+            ->getMockForAbstractClass();
+
+
+        $this->workerBuilder->withCommandSerializer($commandSerializerMock);
+
+
+        $this->assertContains(
+            $commandSerializerMock,
+            $this->workerBuilder->getConstructorArguments($this->getBeanieMock())
+        );
+    }
+
+    public function testBuild_withJobFailureStrategy()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|JobFailureStrategy $jobFailureStrategy */
+        $jobFailureStrategy = $this
+            ->getMockBuilder(JobFailureStrategy::class)
+            ->getMockForAbstractClass();
+
+
+        $this->workerBuilder->withJobFailureStrategy($jobFailureStrategy);
+
+
+        $this->assertContains(
+            $jobFailureStrategy,
+            $this->workerBuilder->getConstructorArguments($this->getBeanieMock())
+        );
     }
 }

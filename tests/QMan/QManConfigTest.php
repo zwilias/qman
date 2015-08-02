@@ -6,18 +6,18 @@ namespace QMan;
 /**
  * Class WorkerConfigTest
  * @package QMan
- * @covers \QMan\WorkerConfig
+ * @covers \QMan\QManConfig
  */
-class WorkerConfigTest extends \PHPUnit_Framework_TestCase
+class QManConfigTest extends \PHPUnit_Framework_TestCase
 {
     public function testConstruct_assignsDefaults()
     {
-        $config = new WorkerConfig();
+        $config = new QManConfig();
 
 
-        $this->assertEquals(WorkerConfig::DEFAULT_MAX_MEMORY_USAGE, $config->getMaxMemoryUsage());
-        $this->assertEquals(WorkerConfig::DEFAULT_MAX_TIME_ALIVE, $config->getMaxTimeAlive());
-        $this->assertEquals([WorkerConfig::DEFAULT_TERMINATION_SIGNAL], $config->getTerminationSignals());
+        $this->assertEquals(QManConfig::DEFAULT_MAX_MEMORY_USAGE, $config->getMaxMemoryUsage());
+        $this->assertEquals(QManConfig::DEFAULT_MAX_TIME_ALIVE, $config->getMaxTimeAlive());
+        $this->assertEquals([QManConfig::DEFAULT_TERMINATION_SIGNAL], $config->getTerminationSignals());
     }
 
     /**
@@ -28,7 +28,7 @@ class WorkerConfigTest extends \PHPUnit_Framework_TestCase
      */
     public function testSetters_notLocked_setsValue($property, $value)
     {
-        $config = new WorkerConfig();
+        $config = new QManConfig();
         $setter = 'set' . ucfirst($property);
         $getter = 'get' . ucfirst($property);
 
@@ -46,7 +46,7 @@ class WorkerConfigTest extends \PHPUnit_Framework_TestCase
     {
         $caughtException = false;
 
-        $config = new WorkerConfig();
+        $config = new QManConfig();
         $config->lock();
 
         $setter = 'set' . ucfirst($property);

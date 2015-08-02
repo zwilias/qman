@@ -21,15 +21,27 @@ class WorkerBuilder
     protected $eventLoop;
 
     /**
-     * @var WorkerConfig
+     * @var QManConfig
      */
-    protected $workerConfig;
+    protected $qManConfig;
+
+    /**
+     * @var CommandSerializer
+     */
+    protected $commandSerializer;
+
+    /**
+     * @var JobFailureStrategy
+     */
+    protected $jobFailureStrategy;
 
     public function __construct()
     {
         $this->logger = new NullLogger();
-        $this->workerConfig = new WorkerConfig();
+        $this->qManConfig = new QManConfig();
         $this->eventLoop = new EventLoop($this->logger);
+        $this->commandSerializer = new GenericCommandSerializer();
+        $this->jobFailureStrategy = new GenericJobFailureStrategy($this->qManConfig, $this->logger);
     }
 
     /**
@@ -39,17 +51,19 @@ class WorkerBuilder
     public function withLogger(LoggerInterface $logger)
     {
         $this->eventLoop->setLogger($logger);
+        $this->jobFailureStrategy->setLogger($logger);
         $this->logger = $logger;
         return $this;
     }
 
     /**
-     * @param WorkerConfig $config
+     * @param QManConfig $config
      * @return $this
      */
-    public function withWorkerConfig(WorkerConfig $config)
+    public function withQManConfig(QManConfig $config)
     {
-        $this->workerConfig = $config;
+        $this->jobFailureStrategy->setConfig($config);
+        $this->qManConfig = $config;
         return $this;
     }
 
@@ -59,8 +73,43 @@ class WorkerBuilder
      */
     public function withEventLoop(EventLoop $eventLoop)
     {
+        $eventLoop->setLogger($this->logger);
         $this->eventLoop = $eventLoop;
         return $this;
+    }
+
+    /**
+     * @param CommandSerializer $commandSerializer
+     * @return $this
+     */
+    public function withCommandSerializer(CommandSerializer $commandSerializer)
+    {
+        $this->commandSerializer = $commandSerializer;
+        return $this;
+    }
+
+    /**
+     * @param JobFailureStrategy $strategy
+     * @return $this
+     */
+    public function withJobFailureStrategy(JobFailureStrategy $strategy)
+    {
+        $strategy->setLogger($this->logger);
+        $strategy->setConfig($this->qManConfig);
+        $this->jobFailureStrategy = $strategy;
+        return $this;
+    }
+
+    public function getConstructorArguments(Beanie $beanie)
+    {
+        return [
+            $beanie,
+            $this->qManConfig,
+            $this->eventLoop,
+            $this->commandSerializer,
+            $this->jobFailureStrategy,
+            $this->logger
+        ];
     }
 
     /**
@@ -69,6 +118,8 @@ class WorkerBuilder
      */
     public function build(Beanie $beanie)
     {
-        return new Worker($beanie, $this->workerConfig, $this->eventLoop, $this->logger);
+        // For now, do it this way. As soon as PHP55 is out of EOL, switch to the splat operator:
+        // return new Worker(...$this->getConstructorArguments($beanie));
+        return (new \ReflectionClass(Worker::class))->newInstanceArgs($this->getConstructorArguments($beanie));
     }
 }
