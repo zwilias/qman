@@ -5,11 +5,12 @@ namespace QMan;
 
 
 use SuperClosure\Serializer;
+use SuperClosure\SerializerInterface;
 
 class ClosureCommand implements Command
 {
     /**
-     * @var Serializer
+     * @var SerializerInterface
      */
     protected $serializer;
 
@@ -19,9 +20,9 @@ class ClosureCommand implements Command
     protected $closure;
 
     /**
-     * @param Serializer|null $serializer
+     * @param SerializerInterface|null $serializer
      */
-    public function __construct(Serializer $serializer = null)
+    public function __construct(SerializerInterface $serializer = null)
     {
         $this->serializer = $serializer ?: new Serializer();
     }
