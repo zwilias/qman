@@ -10,7 +10,7 @@ use Beanie\Producer;
 /**
  * Class QManTest
  * @package QMan
- * @covers \QMan\Qman
+ * @covers \QMan\QMan
  */
 class QManTest extends \PHPUnit_Framework_TestCase
 {

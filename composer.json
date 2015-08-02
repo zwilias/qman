@@ -1,9 +1,22 @@
 {
+  "name": "zwilias/qman",
+  "type": "library",
+  "description": "An evented beanstalkd queue manager",
+  "keywords": ["beanstalk", "beanstalkd", "queue", "closure", "worker", "job", "libev", "eventloop"],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ilias Van Peer",
+      "email": "ilias@idlemonkeys.net"
+    }
+  ],
   "minimum-stability": "alpha",
   "require": {
     "zwilias/beanie": "dev-master",
     "jeremeamia/superclosure": "^2.1",
-    "psr/log": "^1.0"
+    "psr/log": "^1.0",
+    "php": ">=5.5.0",
+    "ext-ev": "^0.2"
   },
   "require-dev": {
     "monolog/monolog": "^1.15",
