@@ -9,7 +9,9 @@ use Beanie\Job\Job as BeanieJob;
 
 class Job
 {
+    /** @var BeanieJob */
     protected $job;
+    /** @var Command */
     protected $command;
 
     /**
