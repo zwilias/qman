@@ -41,18 +41,12 @@ class EventLoop implements LoggerAwareInterface
 
     /**
      * @param LoggerInterface|null $logger
-     * @param callable $jobReceivedCallback
-     * @param callable $jobListenerRemovedCallback
      * @throws \Exception
      */
-    public function __construct(
-        LoggerInterface $logger = null,
-        callable $jobReceivedCallback = null,
-        callable $jobListenerRemovedCallback = null
-    ) {
+    public function __construct(LoggerInterface $logger = null) {
         $this->logger = $logger ?: new NullLogger();
-        $this->jobReceivedCallback = $jobReceivedCallback ?: function () {};
-        $this->jobListenerRemovedCallback = $jobListenerRemovedCallback ?: function () {};
+        $this->jobReceivedCallback = function () {};
+        $this->jobListenerRemovedCallback =  function () {};
     }
 
     /**
@@ -270,5 +264,25 @@ class EventLoop implements LoggerAwareInterface
 
             unset($watcher);
         }
+    }
+
+    /**
+     * @param callable $jobReceivedCallback
+     * @return EventLoop
+     */
+    public function setJobReceivedCallback(callable $jobReceivedCallback)
+    {
+        $this->jobReceivedCallback = $jobReceivedCallback;
+        return $this;
+    }
+
+    /**
+     * @param callable $jobListenerRemovedCallback
+     * @return EventLoop
+     */
+    public function setJobListenerRemovedCallback(callable $jobListenerRemovedCallback)
+    {
+        $this->jobListenerRemovedCallback = $jobListenerRemovedCallback;
+        return $this;
     }
 }

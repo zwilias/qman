@@ -7,7 +7,6 @@ require_once 'NativeFunctionStub_TestCase.php';
 
 use Beanie\Exception\SocketException;
 use Beanie\Job\JobOath;
-use Psr\Log\NullLogger;
 use Beanie\Worker as BeanieWorker;
 
 /**
@@ -281,15 +280,8 @@ class EventLoopTest extends NativeFunctionStub_TestCase
                 [SIG_UNBLOCK, []]
             );
 
-        $eventLoop = new EventLoop(
-            new NullLogger(),
-            function ($job) {
-                $this->assertEquals('Job', $job);
-            },
-            function () {
-                $this->fail('This callback should not be called');
-            }
-        );
+        $eventLoop = new EventLoop();
+        $eventLoop->setJobReceivedCallback(function ($job) { $this->assertEquals('Job', $job); });
 
 
         $eventLoop->registerJobListener($workerMock);
@@ -338,16 +330,16 @@ class EventLoopTest extends NativeFunctionStub_TestCase
 
         $callbackCalled = false;
 
-        $eventLoop = new EventLoop(
-            new NullLogger(),
-            function ($job) {
+        $eventLoop = new EventLoop();
+
+        $eventLoop
+            ->setJobReceivedCallback(function ($job) {
                 $this->assertEquals('Job', $job);
                 throw new SocketException('go');
-            },
-            function () use (&$callbackCalled) {
+            })
+            ->setJobListenerRemovedCallback(function () use (&$callbackCalled) {
                 $callbackCalled = true;
-            }
-        );
+            });
 
 
         $eventLoop->registerJobListener($workerMock);
@@ -396,16 +388,16 @@ class EventLoopTest extends NativeFunctionStub_TestCase
             ->willReturn($jobOathMock);
 
 
-        $eventLoop = new EventLoop(
-            new NullLogger(),
-            function ($job) {
+        $eventLoop = new EventLoop();
+        $eventLoop
+            ->setJobReceivedCallback(function ($job) {
                 $this->assertEquals('Job', $job);
-                throw new \RuntimeException('go');
-            },
-            function () {
-                $this->fail('should not get called');
-            }
-        );
+                throw new \RuntimeException('go handle this');
+            })
+            ->setJobListenerRemovedCallback(function () {
+                $this->fail('should not be called');
+            })
+        ;
 
 
         $eventLoop->registerJobListener($workerMock);
@@ -444,11 +436,8 @@ class EventLoopTest extends NativeFunctionStub_TestCase
         /** @var \PHPUnit_Framework_MockObject_MockObject|EventLoop $eventLoopStub */
         $eventLoopStub = $this
             ->getMockBuilder(EventLoop::class)
-            ->disableOriginalConstructor()
             ->setMethods(['removeWatcher', 'registerJobListener'])
             ->getMock();
-
-        $eventLoopStub->setLogger(new NullLogger());
 
         $watcher = $this->getWatcherMock();
 
@@ -478,11 +467,8 @@ class EventLoopTest extends NativeFunctionStub_TestCase
         /** @var \PHPUnit_Framework_MockObject_MockObject|EventLoop $eventLoopStub */
         $eventLoopStub = $this
             ->getMockBuilder(EventLoop::class)
-            ->disableOriginalConstructor()
             ->setMethods(['removeWatcher', 'registerJobListener'])
             ->getMock();
-
-        $eventLoopStub->setLogger(new NullLogger());
 
         $watcher = $this->getWatcherMock();
 

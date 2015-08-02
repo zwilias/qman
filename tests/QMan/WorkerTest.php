@@ -6,6 +6,7 @@ namespace QMan;
 require_once 'NativeFunctionStub_TestCase.php';
 
 use Beanie\Beanie;
+use Psr\Log\NullLogger;
 
 /**
  * Class WorkerTest
@@ -16,6 +17,7 @@ class WorkerTest extends NativeFunctionStub_TestCase
 {
     public function testConstructLocksConfig()
     {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|WorkerConfig $configMock */
         $configMock = $this
             ->getMockBuilder(WorkerConfig::class)
             ->setMethods(['lock'])
@@ -32,7 +34,9 @@ class WorkerTest extends NativeFunctionStub_TestCase
             ->getMock();
 
 
-        new Worker($beanieMock, $configMock);
+        (new WorkerBuilder())
+            ->withWorkerConfig($configMock)
+            ->build($beanieMock);
     }
 
     public function testRun_registersListeners_runsEventLoop_quitsAllWorkers_ignoresQuitException()
@@ -102,7 +106,9 @@ class WorkerTest extends NativeFunctionStub_TestCase
             ->willReturnSelf();
 
 
-        $worker = new Worker($beanieMock, null, $eventLoopMock);
+        $worker = (new WorkerBuilder())
+            ->withEventLoop($eventLoopMock)
+            ->build($beanieMock);
         $worker->run();
     }
 
@@ -133,7 +139,7 @@ class WorkerTest extends NativeFunctionStub_TestCase
             ->with($this->isType('int'), $this->isType('int'), $beanieWorkerMock);
 
 
-        $worker = new Worker($beanieMock, null, $eventLoopMock);
+        $worker = (new WorkerBuilder())->withEventLoop($eventLoopMock)->build($beanieMock);
         $worker->removedJobListenerCallback($beanieWorkerMock);
     }
 
@@ -170,7 +176,7 @@ class WorkerTest extends NativeFunctionStub_TestCase
         /** @var \PHPUnit_Framework_MockObject_MockObject|Worker $workerStub */
         $workerStub = $this->getMockBuilder(Worker::class)
             ->setMethods(['registerWatchers', 'shutdown'])
-            ->setConstructorArgs([$beanieMock, null, $eventLoopMock])
+            ->setConstructorArgs([$beanieMock, new WorkerConfig(), $eventLoopMock, new NullLogger()])
             ->getMock();
 
 
@@ -210,7 +216,7 @@ class WorkerTest extends NativeFunctionStub_TestCase
         /** @var \PHPUnit_Framework_MockObject_MockObject|Worker $workerStub */
         $workerStub = $this->getMockBuilder(Worker::class)
             ->setMethods(['registerWatchers', 'shutdown'])
-            ->setConstructorArgs([$beanieMock, null, $eventLoopMock])
+            ->setConstructorArgs([$beanieMock, new WorkerConfig(), $eventLoopMock, new NullLogger()])
             ->getMock();
 
 
@@ -232,7 +238,7 @@ class WorkerTest extends NativeFunctionStub_TestCase
             ->getMock();
 
 
-        $worker = new Worker($beanieMock);
+        $worker = (new WorkerBuilder())->build($beanieMock);
 
 
         $this->assertTrue($worker->checkMaximalMemoryUsage());
@@ -252,7 +258,7 @@ class WorkerTest extends NativeFunctionStub_TestCase
             ->getMock();
 
 
-        $worker = new Worker($beanieMock);
+        $worker = (new WorkerBuilder())->build($beanieMock);
 
 
         $this->assertFalse($worker->checkMaximalMemoryUsage());

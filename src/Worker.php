@@ -9,7 +9,6 @@ use Beanie\Job\Job;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 
 class Worker implements LoggerAwareInterface
 {
@@ -29,22 +28,18 @@ class Worker implements LoggerAwareInterface
 
     /**
      * @param Beanie $beanie
-     * @param WorkerConfig|null $config
+     * @param WorkerConfig $config
      * @param EventLoop $eventLoop
-     * @param LoggerInterface|null $logger
-     * @throws \Exception
+     * @param LoggerInterface $logger
      */
-    public function __construct(
-        Beanie $beanie,
-        WorkerConfig $config = null,
-        EventLoop $eventLoop = null,
-        LoggerInterface $logger = null
-    ) {
-        $this->logger = $logger ?: new NullLogger();
-        $this->config = $config ?: new WorkerConfig();
-        $this->eventLoop = $eventLoop ?: new EventLoop(
-            $this->logger, [$this, 'handleJob'], [$this, 'removedJobListenerCallback']
-        );
+    public function __construct(Beanie $beanie, WorkerConfig $config, EventLoop $eventLoop, LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+        $this->config = $config;
+        $this->eventLoop = $eventLoop;
+
+        $this->eventLoop->setJobListenerRemovedCallback([$this, 'removedJobListenerCallback']);
+        $this->eventLoop->setJobReceivedCallback([$this, 'handleJob']);
 
         $this->beanie = $beanie;
 
