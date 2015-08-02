@@ -12,15 +12,13 @@
   ],
   "minimum-stability": "alpha",
   "require": {
-    "zwilias/beanie": "dev-master",
+    "zwilias/beanie": "~0.1",
     "jeremeamia/superclosure": "^2.1",
     "psr/log": "^1.0",
     "php": ">=5.5.0",
     "ext-ev": "^0.2"
   },
   "require-dev": {
-    "monolog/monolog": "^1.15",
-    "bramus/monolog-colored-line-formatter": "^2.0",
     "phpunit/phpunit": "^4.7",
     "phpunit/php-invoker": "^1.1",
     "scrutinizer/ocular": "^1.1"
@@ -29,5 +27,8 @@
     "psr-4": {
       "QMan\\": "src/"
     }
+  },
+  "suggest": {
+    "monolog/monolog": "Allows for powerful, granular logging. QMan has full support for psr/log, which this provides."
   }
 }
