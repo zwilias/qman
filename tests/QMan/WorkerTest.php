@@ -35,7 +35,7 @@ class WorkerTest extends NativeFunctionStub_TestCase
         new Worker($beanieMock, $configMock);
     }
 
-    public function testRun()
+    public function testRun_registersListeners_runsEventLoop_quitsAllWorkers_ignoresQuitException()
     {
         /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
         $beanieMock = $this
@@ -65,7 +65,8 @@ class WorkerTest extends NativeFunctionStub_TestCase
             /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
             $workerMock
                 ->expects($this->once())
-                ->method('quit');
+                ->method('quit')
+                ->willThrowException(new \RuntimeException());
         }, $workers);
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|\QMan\EventLoop $eventLoopMock */
