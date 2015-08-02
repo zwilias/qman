@@ -32,9 +32,9 @@ class AbstractCommandSerializerTest extends \PHPUnit_Framework_TestCase
             'data' => $testData
         ]);
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Command $commandMock */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandInterface $commandMock */
         $commandMock = $this
-            ->getMockBuilder(Command::class)
+            ->getMockBuilder(CommandInterface::class)
             ->setMethods(['getType', 'getData'])
             ->getMockForAbstractClass();
 

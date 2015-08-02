@@ -7,7 +7,7 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
-class GenericJobFailureStrategy implements JobFailureStrategy
+class GenericJobFailureStrategy implements JobFailureStrategyInterface
 {
     use LoggerAwareTrait,
         ConfigAwareTrait;

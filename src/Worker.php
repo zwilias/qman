@@ -24,7 +24,7 @@ class Worker implements LoggerAwareInterface
     protected $eventLoop;
 
     /**
-     * @var CommandSerializer
+     * @var CommandSerializerInterface
      */
     protected $commandSerializer;
 
@@ -32,7 +32,7 @@ class Worker implements LoggerAwareInterface
     private $startTime;
 
     /**
-     * @var JobFailureStrategy
+     * @var JobFailureStrategyInterface
      */
     protected $jobFailureStrategy;
 
@@ -40,16 +40,16 @@ class Worker implements LoggerAwareInterface
      * @param Beanie $beanie
      * @param QManConfig $config
      * @param EventLoop $eventLoop
-     * @param CommandSerializer $commandSerializer
-     * @param JobFailureStrategy $jobFailureStrategy
+     * @param CommandSerializerInterface $commandSerializer
+     * @param JobFailureStrategyInterface $jobFailureStrategy
      * @param LoggerInterface $logger
      */
     public function __construct(
         Beanie $beanie,
         QManConfig $config,
         EventLoop $eventLoop,
-        CommandSerializer $commandSerializer,
-        JobFailureStrategy $jobFailureStrategy,
+        CommandSerializerInterface $commandSerializer,
+        JobFailureStrategyInterface $jobFailureStrategy,
         LoggerInterface $logger
     ) {
         $this->logger = $logger;

@@ -7,7 +7,7 @@ namespace QMan;
 use SuperClosure\Serializer;
 use SuperClosure\SerializerInterface;
 
-class ClosureCommand implements Command
+class ClosureCommand implements CommandInterface
 {
     /**
      * @var SerializerInterface
@@ -45,7 +45,7 @@ class ClosureCommand implements Command
 
     /**
      * @param mixed $data
-     * @return Command
+     * @return CommandInterface
      */
     public function setData($data)
     {

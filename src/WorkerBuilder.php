@@ -26,12 +26,12 @@ class WorkerBuilder
     protected $qManConfig;
 
     /**
-     * @var CommandSerializer
+     * @var CommandSerializerInterface
      */
     protected $commandSerializer;
 
     /**
-     * @var JobFailureStrategy
+     * @var JobFailureStrategyInterface
      */
     protected $jobFailureStrategy;
 
@@ -79,20 +79,20 @@ class WorkerBuilder
     }
 
     /**
-     * @param CommandSerializer $commandSerializer
+     * @param CommandSerializerInterface $commandSerializer
      * @return $this
      */
-    public function withCommandSerializer(CommandSerializer $commandSerializer)
+    public function withCommandSerializer(CommandSerializerInterface $commandSerializer)
     {
         $this->commandSerializer = $commandSerializer;
         return $this;
     }
 
     /**
-     * @param JobFailureStrategy $strategy
+     * @param JobFailureStrategyInterface $strategy
      * @return $this
      */
-    public function withJobFailureStrategy(JobFailureStrategy $strategy)
+    public function withJobFailureStrategy(JobFailureStrategyInterface $strategy)
     {
         $strategy->setLogger($this->logger);
         $strategy->setConfig($this->qManConfig);

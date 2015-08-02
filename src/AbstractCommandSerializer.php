@@ -4,13 +4,13 @@
 namespace QMan;
 
 
-abstract class AbstractCommandSerializer implements CommandSerializer
+abstract class AbstractCommandSerializer implements CommandSerializerInterface
 {
     /**
-     * @param Command $command
+     * @param CommandInterface $command
      * @return string
      */
-    public function serialize(Command $command)
+    public function serialize(CommandInterface $command)
     {
         return json_encode([
             'type' => $command->getType(),
@@ -20,7 +20,7 @@ abstract class AbstractCommandSerializer implements CommandSerializer
 
     /**
      * @param string $data
-     * @return Command
+     * @return CommandInterface
      */
     public function unserialize($data)
     {
@@ -32,7 +32,7 @@ abstract class AbstractCommandSerializer implements CommandSerializer
     /**
      * @param string $type
      * @param mixed $data
-     * @return Command
+     * @return CommandInterface
      */
     abstract public function createCommand($type, $data);
 }

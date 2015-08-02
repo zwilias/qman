@@ -78,7 +78,7 @@ class WorkerBuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testBuild_withCommandSerializer()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandSerializer $commandSerializerMock */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandSerializerInterface $commandSerializerMock */
         $commandSerializerMock = $this
             ->getMockBuilder(AbstractCommandSerializer::class)
             ->getMockForAbstractClass();
@@ -95,9 +95,9 @@ class WorkerBuilderTest extends \PHPUnit_Framework_TestCase
 
     public function testBuild_withJobFailureStrategy()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|JobFailureStrategy $jobFailureStrategy */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|JobFailureStrategyInterface $jobFailureStrategy */
         $jobFailureStrategy = $this
-            ->getMockBuilder(JobFailureStrategy::class)
+            ->getMockBuilder(JobFailureStrategyInterface::class)
             ->getMockForAbstractClass();
 
 

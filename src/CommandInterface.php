@@ -4,7 +4,7 @@
 namespace QMan;
 
 
-interface Command
+interface CommandInterface
 {
     /**
      * @return boolean
@@ -18,7 +18,7 @@ interface Command
 
     /**
      * @param mixed $data
-     * @return Command
+     * @return CommandInterface
      */
     public function setData($data);
 

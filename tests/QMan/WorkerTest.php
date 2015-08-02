@@ -272,12 +272,12 @@ class WorkerTest extends NativeFunctionStub_TestCase
         $testData = 'test';
 
         $commandMock = $this
-            ->getMockBuilder(Command::class)
+            ->getMockBuilder(CommandInterface::class)
             ->getMockForAbstractClass();
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandSerializer $commandSerializerMock */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandSerializerInterface $commandSerializerMock */
         $commandSerializerMock = $this
-            ->getMockBuilder(CommandSerializer::class)
+            ->getMockBuilder(CommandSerializerInterface::class)
             ->setMethods(['unserialize'])
             ->getMockForAbstractClass();
 
@@ -317,7 +317,7 @@ class WorkerTest extends NativeFunctionStub_TestCase
 
     public function testHandleJob_deletesJobOnSuccess()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Command $jobMock */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandInterface $jobMock */
         $jobMock = $this
             ->getMockBuilder(Job::class)
             ->disableOriginalConstructor()
@@ -359,16 +359,16 @@ class WorkerTest extends NativeFunctionStub_TestCase
 
     public function testHandleJob_executeReturnsFalse_delegatesToJobFailureStrategy()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Command $jobMock */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandInterface $jobMock */
         $jobMock = $this
             ->getMockBuilder(Job::class)
             ->disableOriginalConstructor()
             ->setMethods(['execute', 'delete'])
             ->getMockForAbstractClass();
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|JobFailureStrategy $jobFailureStrategy */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|JobFailureStrategyInterface $jobFailureStrategy */
         $jobFailureStrategy = $this
-            ->getMockBuilder(JobFailureStrategy::class)
+            ->getMockBuilder(JobFailureStrategyInterface::class)
             ->setMethods(['handleFailedJob'])
             ->getMockForAbstractClass();
 
@@ -419,16 +419,16 @@ class WorkerTest extends NativeFunctionStub_TestCase
 
     public function testHandleJob_executeThrowsException_delegatesToJobFailureStrategy()
     {
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Command $jobMock */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|CommandInterface $jobMock */
         $jobMock = $this
             ->getMockBuilder(Job::class)
             ->disableOriginalConstructor()
             ->setMethods(['execute', 'delete'])
             ->getMockForAbstractClass();
 
-        /** @var \PHPUnit_Framework_MockObject_MockObject|JobFailureStrategy $jobFailureStrategy */
+        /** @var \PHPUnit_Framework_MockObject_MockObject|JobFailureStrategyInterface $jobFailureStrategy */
         $jobFailureStrategy = $this
-            ->getMockBuilder(JobFailureStrategy::class)
+            ->getMockBuilder(JobFailureStrategyInterface::class)
             ->setMethods(['handleFailedJob'])
             ->getMockForAbstractClass();
 

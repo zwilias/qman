@@ -14,7 +14,7 @@ class JobTest extends \PHPUnit_Framework_TestCase
     /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Job\Job */
     private $beanieJobMock;
 
-    /** @var \PHPUnit_Framework_MockObject_MockObject|Command */
+    /** @var \PHPUnit_Framework_MockObject_MockObject|CommandInterface */
     private $commandMock;
 
     public function setUp()
@@ -26,7 +26,7 @@ class JobTest extends \PHPUnit_Framework_TestCase
             ->getMock();
 
         $this->commandMock = $this
-            ->getMockBuilder(Command::class)
+            ->getMockBuilder(CommandInterface::class)
             ->setMethods(['execute'])
             ->getMockForAbstractClass();
 

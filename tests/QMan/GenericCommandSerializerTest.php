@@ -20,7 +20,7 @@ class GenericCommandSerializerTest extends \PHPUnit_Framework_TestCase
 
         $this->testCommandClass = get_class(
             $this
-                ->getMockBuilder(Command::class)
+                ->getMockBuilder(CommandInterface::class)
                 ->setMethods(['setData'])
                 ->getMockForAbstractClass()
         );
@@ -50,7 +50,7 @@ class GenericCommandSerializerTest extends \PHPUnit_Framework_TestCase
     {
         $otherTestCommandClass = get_class(
             $this
-                ->getMockBuilder(Command::class)
+                ->getMockBuilder(CommandInterface::class)
                 ->setMethods(['setData', 'getData'])
                 ->getMockForAbstractClass()
         );

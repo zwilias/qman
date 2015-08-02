@@ -17,13 +17,13 @@ class QManTest extends \PHPUnit_Framework_TestCase
     /** @var \PHPUnit_Framework_MockObject_MockObject|Producer */
     protected $producerMock;
 
-    /** @var \PHPUnit_Framework_MockObject_MockObject|CommandSerializer */
+    /** @var \PHPUnit_Framework_MockObject_MockObject|CommandSerializerInterface */
     protected $serializerMock;
 
     /** @var QMan */
     protected $qMan;
 
-    /** @var \PHPUnit_Framework_MockObject_MockObject|Command */
+    /** @var \PHPUnit_Framework_MockObject_MockObject|CommandInterface */
     protected $commandMock;
 
     public function setUp()
@@ -35,12 +35,12 @@ class QManTest extends \PHPUnit_Framework_TestCase
             ->getMock();
 
         $this->serializerMock = $this
-            ->getMockBuilder(CommandSerializer::class)
+            ->getMockBuilder(CommandSerializerInterface::class)
             ->setMethods(['serialize'])
             ->getMockForAbstractClass();
 
         $this->commandMock = $this
-            ->getMockBuilder(Command::class)
+            ->getMockBuilder(CommandInterface::class)
             ->setMethods(['getType', 'getData', 'execute'])
             ->getMockForAbstractClass();
 

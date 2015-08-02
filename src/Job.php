@@ -11,14 +11,14 @@ class Job
 {
     /** @var BeanieJob */
     protected $job;
-    /** @var Command */
+    /** @var CommandInterface */
     protected $command;
 
     /**
      * @param BeanieJob $job
-     * @param Command $command
+     * @param CommandInterface $command
      */
-    public function __construct(BeanieJob $job, Command $command)
+    public function __construct(BeanieJob $job, CommandInterface $command)
     {
         $this->job = $job;
         $this->command = $command;

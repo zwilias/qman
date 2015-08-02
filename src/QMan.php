@@ -19,7 +19,7 @@ class QMan implements LoggerAwareInterface
     /** @var Producer */
     protected $producer;
 
-    /** @var CommandSerializer */
+    /** @var CommandSerializerInterface */
     protected $serializer;
 
     /** @var bool */
@@ -27,11 +27,11 @@ class QMan implements LoggerAwareInterface
 
     /**
      * @param Producer $producer
-     * @param CommandSerializer $serializer
+     * @param CommandSerializerInterface $serializer
      * @param LoggerInterface|null $logger
      */
     public function __construct(
-        Producer $producer, CommandSerializer $serializer = null, LoggerInterface $logger = null
+        Producer $producer, CommandSerializerInterface $serializer = null, LoggerInterface $logger = null
     ) {
         $this->producer = $producer;
         $this->logger = $logger ?: new NullLogger();
@@ -39,13 +39,13 @@ class QMan implements LoggerAwareInterface
     }
 
     /**
-     * @param Command $command
+     * @param CommandInterface $command
      * @param int $priority
      * @param int $delay
      * @param int $timeToRun
      */
     public function queue(
-        Command $command,
+        CommandInterface $command,
         $priority = Beanie::DEFAULT_PRIORITY,
         $delay = Beanie::DEFAULT_DELAY,
         $timeToRun = Beanie::DEFAULT_TIME_TO_RUN
@@ -64,10 +64,10 @@ class QMan implements LoggerAwareInterface
 
     /**
      * @param AbstractServerException $exception
-     * @param Command $command
+     * @param CommandInterface $command
      * @throws AbstractServerException
      */
-    protected function handlePutFailure(AbstractServerException $exception, Command $command)
+    protected function handlePutFailure(AbstractServerException $exception, CommandInterface $command)
     {
         $this->logger->alert('Failed to queue command due to server-exception', [
             'exception' => $exception,
@@ -100,7 +100,7 @@ class QMan implements LoggerAwareInterface
     }
 
     /**
-     * @return CommandSerializer
+     * @return CommandSerializerInterface
      */
     public function getSerializer()
     {
@@ -109,11 +109,11 @@ class QMan implements LoggerAwareInterface
 
     /**
      * @param string[] $servers
-     * @param CommandSerializer $serializer
+     * @param CommandSerializerInterface $serializer
      * @param LoggerInterface $logger
      * @return static
      */
-    public static function create(array $servers, CommandSerializer $serializer = null, LoggerInterface $logger = null)
+    public static function create(array $servers, CommandSerializerInterface $serializer = null, LoggerInterface $logger = null)
     {
         return new static(
             Beanie::pool($servers)->producer(),

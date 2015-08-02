@@ -18,7 +18,7 @@ class GenericCommandSerializer extends AbstractCommandSerializer
     /**
      * @param string $type
      * @param mixed $data
-     * @return Command
+     * @return CommandInterface
      */
     public function createCommand($type, $data)
     {
@@ -28,7 +28,7 @@ class GenericCommandSerializer extends AbstractCommandSerializer
             );
         }
 
-        /** @var Command $command */
+        /** @var CommandInterface $command */
         $command = new $this->typeMap[$type]();
         $command->setData($data);
 
@@ -64,7 +64,7 @@ class GenericCommandSerializer extends AbstractCommandSerializer
             );
         }
 
-        if (!in_array(Command::class, class_implements($commandClass))) {
+        if (!in_array(CommandInterface::class, class_implements($commandClass))) {
             throw new \InvalidArgumentException(
                 sprintf('Failed to register Command class \'%s\': class does not implement QMan\Command', $commandClass)
             );
