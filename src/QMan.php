@@ -89,9 +89,9 @@ class QMan implements LoggerAwareInterface
 
     public function queueClosure(
         \Closure $closure,
-         $priority = Beanie::DEFAULT_PRIORITY,
-         $delay = Beanie::DEFAULT_DELAY,
-         $timeToRun = Beanie::DEFAULT_TIME_TO_RUN
+        $priority = Beanie::DEFAULT_PRIORITY,
+        $delay = Beanie::DEFAULT_DELAY,
+        $timeToRun = Beanie::DEFAULT_TIME_TO_RUN
     ) {
         $closureCommand = new ClosureCommand();
         $closureCommand->setClosure($closure);
