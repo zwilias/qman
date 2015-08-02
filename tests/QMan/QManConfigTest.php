@@ -18,6 +18,8 @@ class QManConfigTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(QManConfig::DEFAULT_MAX_MEMORY_USAGE, $config->getMaxMemoryUsage());
         $this->assertEquals(QManConfig::DEFAULT_MAX_TIME_ALIVE, $config->getMaxTimeAlive());
         $this->assertEquals([QManConfig::DEFAULT_TERMINATION_SIGNAL], $config->getTerminationSignals());
+        $this->assertEquals(QManConfig::DEFAULT_MAX_TRIES, $config->getMaxTries());
+        $this->assertEquals(QManConfig::DEFAULT_FAILURE_DELAY, $config->getDefaultFailureDelay());
     }
 
     /**
@@ -69,7 +71,9 @@ class QManConfigTest extends \PHPUnit_Framework_TestCase
         return [
             ['maxMemoryUsage', 10],
             ['maxTimeAlive', 100],
-            ['terminationSignals', [SIGUSR1]]
+            ['terminationSignals', [SIGUSR1]],
+            ['maxTries', 321],
+            ['defaultFailureDelay', 20]
         ];
     }
 }

@@ -21,6 +21,16 @@ class QManConfig
      */
     const DEFAULT_TERMINATION_SIGNAL = SIGTERM;
 
+    /**
+     * Default: how many times a job should be allowed to fail before being buried
+     */
+    const DEFAULT_MAX_TRIES = 3;
+
+    /**
+     * Default: after failure, the job will be released with a certain delay
+     */
+    const DEFAULT_FAILURE_DELAY = 60;
+
     /** @var int */
     private $maxMemoryUsage = self::DEFAULT_MAX_MEMORY_USAGE;
 
@@ -32,6 +42,12 @@ class QManConfig
 
     /** @var bool */
     private $locked = false;
+
+    /** @var int */
+    private $maxTries = self::DEFAULT_MAX_TRIES;
+
+    /** @var int */
+    private $defaultFailureDelay = self::DEFAULT_FAILURE_DELAY;
 
     /**
      * @return int
@@ -87,6 +103,42 @@ class QManConfig
     {
         $this->checkLock()->terminationSignals = $terminationSignals;
 
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxTries()
+    {
+        return $this->maxTries;
+    }
+
+    /**
+     * @param int $maxTries
+     * @return $this
+     */
+    public function setMaxTries($maxTries)
+    {
+        $this->checkLock()->maxTries = $maxTries;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDefaultFailureDelay()
+    {
+        return $this->defaultFailureDelay;
+    }
+
+    /**
+     * @param int $defaultFailureDelay
+     * @return $this
+     */
+    public function setDefaultFailureDelay($defaultFailureDelay)
+    {
+        $this->checkLock()->defaultFailureDelay = $defaultFailureDelay;
         return $this;
     }
 

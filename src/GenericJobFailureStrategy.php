@@ -12,11 +12,19 @@ class GenericJobFailureStrategy implements JobFailureStrategy
     use LoggerAwareTrait,
         ConfigAwareTrait;
 
+    /**
+     * @param QManConfig $config
+     * @param LoggerInterface|null $logger
+     */
     public function __construct(QManConfig $config, LoggerInterface $logger = null)
     {
         $this->setConfig($config);
         $this->logger = $logger ?: new NullLogger();
     }
+
+    /**
+     * @param Job $job
+     */
     public function handleFailedJob(Job $job)
     {
         $stats = $job->stats();
