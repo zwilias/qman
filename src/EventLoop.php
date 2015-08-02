@@ -43,10 +43,11 @@ class EventLoop implements LoggerAwareInterface
      * @param LoggerInterface|null $logger
      * @throws \Exception
      */
-    public function __construct(LoggerInterface $logger = null) {
+    public function __construct(LoggerInterface $logger = null)
+    {
         $this->logger = $logger ?: new NullLogger();
         $this->jobReceivedCallback = function () {};
-        $this->jobListenerRemovedCallback =  function () {};
+        $this->jobListenerRemovedCallback = function () {};
     }
 
     /**
@@ -220,7 +221,7 @@ class EventLoop implements LoggerAwareInterface
         $this->registerWatcher(new \EvSignal(
             $signal,
             function () {
-                $this->logger->info('Received breaking signal.');
+                $this->logger->notice('Received breaking signal.');
                 $this->stop();
             }
         ));
@@ -233,7 +234,7 @@ class EventLoop implements LoggerAwareInterface
      */
     public function run($mode = \Ev::FLAG_AUTO)
     {
-        $this->logger->info('Starting event loop.');
+        $this->logger->notice('Starting event loop.');
         \Ev::run($mode);
     }
 

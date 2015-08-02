@@ -38,6 +38,7 @@ class WorkerBuilder
      */
     public function withLogger(LoggerInterface $logger)
     {
+        $this->eventLoop->setLogger($logger);
         $this->logger = $logger;
         return $this;
     }

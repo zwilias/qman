@@ -65,7 +65,7 @@ class Worker implements LoggerAwareInterface
      */
     public function checkTimeToLive()
     {
-        return (time() - $this->startTime) > $this->config->getMaxTimeAlive();
+        return (time() - $this->startTime) >= $this->config->getMaxTimeAlive();
     }
 
     /**
@@ -73,7 +73,7 @@ class Worker implements LoggerAwareInterface
      */
     public function checkMaximalMemoryUsage()
     {
-        return memory_get_usage(true) > $this->config->getMaxMemoryUsage();
+        return memory_get_usage(true) >= $this->config->getMaxMemoryUsage();
     }
 
     /**
