@@ -100,6 +100,10 @@ class WorkerBuilder
         return $this;
     }
 
+    /**
+     * @param Beanie $beanie
+     * @return array
+     */
     public function getConstructorArguments(Beanie $beanie)
     {
         return [

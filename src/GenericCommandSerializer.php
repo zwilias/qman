@@ -53,11 +53,27 @@ class GenericCommandSerializer extends AbstractCommandSerializer
     }
 
     /**
+     * @param array $typeList
+     */
+    public function registerCommandTypes(array $typeList)
+    {
+        foreach ($typeList as $type => $commandClass) {
+            $this->registerCommandType($type, $commandClass);
+        }
+    }
+
+    /**
      * @param string $type
      * @param string $commandClass
      */
     protected function checkCommandType($type, $commandClass)
     {
+        if (!is_string($type)) {
+            throw new \InvalidArgumentException(
+                sprintf('Failed to register Command class \'%s\': type \'%s\' is not a string', $commandClass, $type)
+            );
+        }
+
         if (!class_exists($commandClass)) {
             throw new \InvalidArgumentException(
                 sprintf('Failed to register Command class \'%s\': class does not exist', $commandClass)

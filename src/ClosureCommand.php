@@ -7,7 +7,7 @@ namespace QMan;
 use SuperClosure\Serializer;
 use SuperClosure\SerializerInterface;
 
-class ClosureCommand implements CommandInterface
+class ClosureCommand extends AbstractCommand
 {
     /**
      * @var SerializerInterface
