@@ -21,6 +21,7 @@
 ## Requirements
 
 - PHP 5.5, PHP 5.6. [`ev`](https://pecl.php.net/package/ev) does not support PHP 7 yet.
+- the pcntl extension.
 - [`ev`](https://pecl.php.net/package/ev), an interface to libev, the high performance full-featured event-loop.
 - one or more instances of beanstalkd.
 
@@ -143,6 +144,84 @@ final class Commands
 
 QMan's `GenericCommandSerializer` comes with a `registerCommandTypes($map)` function which can handle exactly the case
 described above.
+
+### Configuration
+
+Each `Worker` receives an instance of `QManConfig`. The following properties are currently included:
+
+| Property              | Default     | Description |
+|-----------------------|-------------|-----------------|
+| `maxMemoryUsage`      | 20MB        | As soon as your memory usage goes over `maxMemoryUsage`, the worker is killed. |
+| `maxTimeAlive`        | 24h         | Your worker will be killed after `maxTimeAlive` passes. Workers are expected to
+                                        be run in something like supervisord so they can be automatically restarted.   |
+| `terminationSignals`  | `[SIGTERM]` | Upon receiving this signal - while idle - the worker will gracefully shut down.
+                                        If the signal is sent while a job is being processed, handling the signal will
+                                        be postponed until the job is fully processed.                                 |
+| `maxTries`            | 3           | The maximal number of times a job can be executed resulting in failure before 
+                                        the job is buried. <sup>(1)</sup>                                              |
+| `defaultFailureDelay` | 60s         | Every time a job fails, it is released again, with a certain delay. The first
+                                        time it is released, the delay will be `defaultFailureDelay`. The second time, 
+                                        it will be twice that, etc. <sup>(1)</sup>                                     |
+
+*(1)*: Assuming you're using the default `GenericJobFailureStrategy`. Implementing a custom strategy for handling failed
+jobs is, of course, perfectly possible.
+
+Changing configuration is as simple as instantiating `QManConfig`, setting your configuration preferences and passing it
+to the `CommandBuilder`:
+
+```php
+use QMan\QManConfig;
+use QMan\QManBuilder;
+use Beanie\Beanie;
+
+$config = new QManConfig();
+$config->setTerminationSignals([SIGTERM, SIGQUIT]);
+
+$beanie = Beanie::pool($servers);
+
+$worker = (new WorkerBuilder())
+    ->withQManConfig($config)
+    ->build($beanie);
+```
+
+### Handling failed jobs
+
+By default, qMan will employ a very simple strategy when handling failed jobs:
+
+- a failed job will either be buried or released again
+- if a job has failed less than `maxTries` times in a row, it will be released with 
+    `(tries in a row) * defaultFailureDelay`
+- else, when it has failed `maxTries` times in a row, it will be buried
+
+Overriding this behavior can be done easily by implementing `JobFailureStrategyInterface` (which extends both PSR-3's
+`LoggerAwareInterface` and qMan's `ConfigAwareInterface`.
+
+```php
+use Psr\Log\LoggerAwareTrait;
+use QMan\JobFailureStrategyInterface;
+use QMan\Job;
+use QMan\ConfigAwareTrait;
+
+class MyCustomJobFailureStrategy implements JobFailureStrategyInterface
+{
+    use LoggerAwareTrait, ConfigAwareTrait;
+    
+    public function handleFailedJob(Job $job)
+    {
+        // Do stuff, like deleting the job after 10 total tries
+        $stats = $job->stats();
+        
+        if ($stats['reserves'] > 10) {
+            $this->logger->alert('Deleting job after failing to successfully execute over 10 times', ['job' => $job]);
+            $job->delete();
+        }
+    }
+}
+
+use QMan\WorkerBuilder;
+
+$worker = (new WorkerBuilder)->withJobFailureStrategy(new MyCustomJobFailureStrategy())->build([...]);
+```
 
 ## Contributing
 
