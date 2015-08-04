@@ -152,16 +152,10 @@ Each `Worker` receives an instance of `QManConfig`. The following properties are
 | Property              | Default     | Description |
 |-----------------------|-------------|-----------------|
 | `maxMemoryUsage`      | 20MB        | As soon as your memory usage goes over `maxMemoryUsage`, the worker is killed. |
-| `maxTimeAlive`        | 24h         | Your worker will be killed after `maxTimeAlive` passes. Workers are expected to
-                                        be run in something like supervisord so they can be automatically restarted.   |
-| `terminationSignals`  | `[SIGTERM]` | Upon receiving this signal - while idle - the worker will gracefully shut down.
-                                        If the signal is sent while a job is being processed, handling the signal will
-                                        be postponed until the job is fully processed.                                 |
-| `maxTries`            | 3           | The maximal number of times a job can be executed resulting in failure before 
-                                        the job is buried. <sup>(1)</sup>                                              |
-| `defaultFailureDelay` | 60s         | Every time a job fails, it is released again, with a certain delay. The first
-                                        time it is released, the delay will be `defaultFailureDelay`. The second time, 
-                                        it will be twice that, etc. <sup>(1)</sup>                                     |
+| `maxTimeAlive`        | 24h         | Your worker will be killed after `maxTimeAlive` passes. Workers are expected to be run in something like supervisord so they can be automatically restarted. |
+| `terminationSignals`  | `[SIGTERM]` | Upon receiving this signal - while idle - the worker will gracefully shut down. If the signal is sent while a job is being processed, handling the signal will be postponed until the job is fully processed. |
+| `maxTries`            | 3           | The maximal number of times a job can be executed resulting in failure before  the job is buried. <sup>(1)</sup> |
+| `defaultFailureDelay` | 60s         | Every time a job fails, it is released again, with a certain delay. The first time it is released, the delay will be `defaultFailureDelay`. The second time, it will be twice that, etc. <sup>(1)</sup> |
 
 *(1)*: Assuming you're using the default `GenericJobFailureStrategy`. Implementing a custom strategy for handling failed
 jobs is, of course, perfectly possible.
