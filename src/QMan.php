@@ -5,7 +5,7 @@ namespace QMan;
 
 
 use Beanie\Beanie;
-use Beanie\Exception\AbstractServerException;
+use Beanie\Exception\Exception;
 use Beanie\Producer;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -57,19 +57,19 @@ class QMan implements LoggerAwareInterface
                 $delay,
                 $timeToRun
             );
-        } catch (AbstractServerException $serverException) {
-            $this->handlePutFailure($serverException, $command);
+        } catch (Exception $exception) {
+            $this->handlePutFailure($exception, $command);
         }
     }
 
     /**
-     * @param AbstractServerException $exception
+     * @param Exception $exception
      * @param CommandInterface $command
      * @throws AbstractServerException
      */
-    protected function handlePutFailure(AbstractServerException $exception, CommandInterface $command)
+    protected function handlePutFailure(Exception $exception, CommandInterface $command)
     {
-        $this->logger->alert('Failed to queue command due to server-exception', [
+        $this->logger->alert('Failed to queue command due to unexpected exception', [
             'exception' => $exception,
             'producer' => $this->producer,
             'command' => $command
