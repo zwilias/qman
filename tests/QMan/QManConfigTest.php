@@ -20,6 +20,7 @@ class QManConfigTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals([QManConfig::DEFAULT_TERMINATION_SIGNAL], $config->getTerminationSignals());
         $this->assertEquals(QManConfig::DEFAULT_MAX_TRIES, $config->getMaxTries());
         $this->assertEquals(QManConfig::DEFAULT_FAILURE_DELAY, $config->getDefaultFailureDelay());
+        $this->assertEquals([QManConfig::DEFAULT_WATCHED_TUBE], $config->getWatchedTubes());
     }
 
     /**
@@ -73,7 +74,8 @@ class QManConfigTest extends \PHPUnit_Framework_TestCase
             ['maxTimeAlive', 100],
             ['terminationSignals', [SIGUSR1]],
             ['maxTries', 321],
-            ['defaultFailureDelay', 20]
+            ['defaultFailureDelay', 20],
+            ['watchedTubes', ['test', 'test2']]
         ];
     }
 }

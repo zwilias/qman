@@ -6,6 +6,7 @@ namespace QMan;
 require_once 'NativeFunctionStub_TestCase.php';
 
 use Beanie\Beanie;
+use Beanie\Tube\TubeStatus;
 
 /**
  * Class WorkerTest
@@ -49,8 +50,14 @@ class WorkerTest extends NativeFunctionStub_TestCase
 
         $workerMockBuilder = $this
             ->getMockBuilder(\Beanie\Worker::class)
-            ->setMethods(['quit'])
+            ->setMethods(['getTubeStatus', 'quit'])
             ->disableOriginalConstructor();
+
+        $tubeStatusMock = $this
+            ->getMockBuilder(TubeStatus::class)
+            ->setMethods(['setWatchedTubes'])
+            ->disableOriginalConstructor()
+            ->getMock();
 
         $workers = [
             $workerMockBuilder->getMock(),
@@ -59,17 +66,28 @@ class WorkerTest extends NativeFunctionStub_TestCase
             $workerMockBuilder->getMock()
         ];
 
+        $tubeStatusMock
+            ->expects($this->exactly(count($workers)))
+            ->method('setWatchedTubes')
+            ->with([QManConfig::DEFAULT_WATCHED_TUBE])
+            ->willReturn(true);
+
         $beanieMock
             ->expects($this->once())
             ->method('workers')
             ->willReturn($workers);
 
-        array_map(function ($workerMock) {
+        array_map(function ($workerMock) use ($tubeStatusMock) {
             /** @var \PHPUnit_Framework_MockObject_MockObject|\Beanie\Worker $workerMock */
             $workerMock
                 ->expects($this->once())
                 ->method('quit')
                 ->willThrowException(new \RuntimeException());
+
+            $workerMock
+                ->expects($this->once())
+                ->method('getTubeStatus')
+                ->willReturn($tubeStatusMock);
         }, $workers);
 
         /** @var \PHPUnit_Framework_MockObject_MockObject|\QMan\EventLoop $eventLoopMock */

@@ -145,6 +145,10 @@ class Worker implements LoggerAwareInterface
     protected function registerWatchers($workers)
     {
         array_map(function (\Beanie\Worker $worker) {
+            $worker->getTubeStatus()->setWatchedTubes(
+                $this->config->getWatchedTubes()
+            );
+
             $this->eventLoop->registerJobListener($worker);
         }, $workers);
 

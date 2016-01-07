@@ -4,6 +4,8 @@
 namespace QMan;
 
 
+use Beanie\Beanie;
+
 class QManConfig
 {
     /**
@@ -31,6 +33,11 @@ class QManConfig
      */
     const DEFAULT_FAILURE_DELAY = 60;
 
+    /**
+     * Default: the default list of tubes to watch
+     */
+    const DEFAULT_WATCHED_TUBE = Beanie::DEFAULT_TUBE;
+
     /** @var int */
     private $maxMemoryUsage = self::DEFAULT_MAX_MEMORY_USAGE;
 
@@ -48,6 +55,9 @@ class QManConfig
 
     /** @var int */
     private $defaultFailureDelay = self::DEFAULT_FAILURE_DELAY;
+
+    /** @var string[] */
+    private $watchedTubes = [self::DEFAULT_WATCHED_TUBE];
 
     /**
      * @return int
@@ -139,6 +149,24 @@ class QManConfig
     public function setDefaultFailureDelay($defaultFailureDelay)
     {
         $this->checkLock()->defaultFailureDelay = $defaultFailureDelay;
+        return $this;
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getWatchedTubes()
+    {
+        return $this->watchedTubes;
+    }
+
+    /**
+     * @param string[] $watchedTubes
+     * @return QManConfig
+     */
+    public function setWatchedTubes($watchedTubes)
+    {
+        $this->checkLock()->watchedTubes = $watchedTubes;
         return $this;
     }
 
