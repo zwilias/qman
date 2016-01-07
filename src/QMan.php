@@ -40,23 +40,28 @@ class QMan implements LoggerAwareInterface
 
     /**
      * @param CommandInterface $command
+     * @param string $tube
      * @param int $priority
      * @param int $delay
      * @param int $timeToRun
+     * @throws Exception
      */
     public function queue(
         CommandInterface $command,
+        $tube = Beanie::DEFAULT_TUBE,
         $priority = Beanie::DEFAULT_PRIORITY,
         $delay = Beanie::DEFAULT_DELAY,
         $timeToRun = Beanie::DEFAULT_TIME_TO_RUN
     ) {
         try {
-            $this->producer->put(
-                $this->serializer->serialize($command),
-                $priority,
-                $delay,
-                $timeToRun
-            );
+            $this->producer
+                ->useTube($tube)
+                ->put(
+                    $this->serializer->serialize($command),
+                    $priority,
+                    $delay,
+                    $timeToRun
+                );
         } catch (Exception $exception) {
             $this->handlePutFailure($exception, $command);
         }
@@ -65,7 +70,7 @@ class QMan implements LoggerAwareInterface
     /**
      * @param Exception $exception
      * @param CommandInterface $command
-     * @throws AbstractServerException
+     * @throws Exception
      */
     protected function handlePutFailure(Exception $exception, CommandInterface $command)
     {
@@ -89,6 +94,7 @@ class QMan implements LoggerAwareInterface
 
     public function queueClosure(
         \Closure $closure,
+        $tube = Beanie::DEFAULT_TUBE,
         $priority = Beanie::DEFAULT_PRIORITY,
         $delay = Beanie::DEFAULT_DELAY,
         $timeToRun = Beanie::DEFAULT_TIME_TO_RUN
@@ -96,7 +102,7 @@ class QMan implements LoggerAwareInterface
         $closureCommand = new ClosureCommand();
         $closureCommand->setClosure($closure);
 
-        $this->queue($closureCommand, $priority, $delay, $timeToRun);
+        $this->queue($closureCommand, $tube, $priority, $delay, $timeToRun);
     }
 
     /**

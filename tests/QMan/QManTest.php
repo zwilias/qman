@@ -14,6 +14,8 @@ use Beanie\Producer;
  */
 class QManTest extends \PHPUnit_Framework_TestCase
 {
+    const TEST_TUBE = 'test';
+
     /** @var \PHPUnit_Framework_MockObject_MockObject|Producer */
     protected $producerMock;
 
@@ -31,7 +33,7 @@ class QManTest extends \PHPUnit_Framework_TestCase
         $this->producerMock = $this
             ->getMockBuilder(Producer::class)
             ->disableOriginalConstructor()
-            ->setMethods(['put'])
+            ->setMethods(['put', 'useTube'])
             ->getMock();
 
         $this->serializerMock = $this
@@ -43,6 +45,12 @@ class QManTest extends \PHPUnit_Framework_TestCase
             ->getMockBuilder(CommandInterface::class)
             ->setMethods(['getType', 'getData', 'execute'])
             ->getMockForAbstractClass();
+
+        $this->producerMock
+            ->expects($this->any())
+            ->method('useTube')
+            ->with($this->isType('string'))
+            ->willReturnSelf();
 
         $this->qMan = new QMan($this->producerMock, $this->serializerMock);
     }
@@ -73,7 +81,7 @@ class QManTest extends \PHPUnit_Framework_TestCase
         call_user_func_array([$invocationMocker, 'with'], array_merge([$testData], $params));
 
 
-        call_user_func_array([$this->qMan, 'queue'], array_merge([$this->commandMock], $params));
+        call_user_func_array([$this->qMan, 'queue'], array_merge([$this->commandMock, self::TEST_TUBE], $params));
     }
 
     /**
@@ -104,7 +112,7 @@ class QManTest extends \PHPUnit_Framework_TestCase
         $invocationMocker->willThrowException($serverExceptionMock);
 
 
-        call_user_func_array([$this->qMan, 'queue'], array_merge([$this->commandMock], $params));
+        call_user_func_array([$this->qMan, 'queue'], array_merge([$this->commandMock, self::TEST_TUBE], $params));
     }
 
 
@@ -134,7 +142,7 @@ class QManTest extends \PHPUnit_Framework_TestCase
         $invocationMocker->willThrowException(new \RuntimeException());
 
 
-        call_user_func_array([$this->qMan, 'queue'], array_merge([$this->commandMock], $params));
+        call_user_func_array([$this->qMan, 'queue'], array_merge([$this->commandMock, self::TEST_TUBE], $params));
     }
 
     /**
@@ -170,7 +178,7 @@ class QManTest extends \PHPUnit_Framework_TestCase
         $invocationMocker->willThrowException($serverExceptionMock);
 
 
-        call_user_func_array([$this->qMan, 'queue'], array_merge([$this->commandMock], $params));
+        call_user_func_array([$this->qMan, 'queue'], array_merge([$this->commandMock, self::TEST_TUBE], $params));
     }
 
     /**
@@ -198,7 +206,7 @@ class QManTest extends \PHPUnit_Framework_TestCase
         call_user_func_array([$invocationMocker, 'with'], array_merge([$testData], $params));
 
 
-        call_user_func_array([$this->qMan, 'queueClosure'], array_merge([$closure], $params));
+        call_user_func_array([$this->qMan, 'queueClosure'], array_merge([$closure, self::TEST_TUBE], $params));
     }
 
     public function testStaticCreate_createsFromListOfServerNames()
