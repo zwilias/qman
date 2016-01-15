@@ -7,7 +7,7 @@ namespace QMan;
 use Beanie\Beanie;
 use Beanie\Job\Job as BeanieJob;
 
-class Job
+class Job implements \JsonSerializable
 {
     /** @var BeanieJob */
     protected $job;
@@ -68,5 +68,16 @@ class Job
     public function execute()
     {
         return $this->command->execute();
+    }
+
+    /**
+     * @return array
+     */
+    function jsonSerialize()
+    {
+        return [
+            'job' => $this->job,
+            'command' => $this->command
+        ];
     }
 }

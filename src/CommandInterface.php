@@ -4,7 +4,7 @@
 namespace QMan;
 
 
-interface CommandInterface
+interface CommandInterface extends \JsonSerializable
 {
     /**
      * @return boolean

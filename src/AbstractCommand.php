@@ -38,4 +38,17 @@ abstract class AbstractCommand implements CommandInterface
 
         return $command;
     }
+
+    /**
+     * @return array
+     */
+    public function jsonSerialize()
+    {
+        return [
+            'type' => $this->getType(),
+            'data' => $this->getData()
+        ];
+    }
+
+
 }

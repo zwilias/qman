@@ -21,13 +21,13 @@ class JobTest extends \PHPUnit_Framework_TestCase
     {
         $this->beanieJobMock = $this
             ->getMockBuilder(\Beanie\Job\Job::class)
-            ->setMethods(['stats', 'release', 'bury', 'delete'])
+            ->setMethods(['stats', 'release', 'bury', 'delete', 'jsonSerialize'])
             ->disableOriginalConstructor()
             ->getMock();
 
         $this->commandMock = $this
             ->getMockBuilder(CommandInterface::class)
-            ->setMethods(['execute'])
+            ->setMethods(['execute', 'jsonSerialize'])
             ->getMockForAbstractClass();
 
         $this->job = new Job($this->beanieJobMock, $this->commandMock);
@@ -127,5 +127,29 @@ class JobTest extends \PHPUnit_Framework_TestCase
 
 
         $this->assertTrue($this->job->execute());
+    }
+
+    public function testJsonEncode_returnsExpectedData()
+    {
+        $testJob = 'job';
+        $testCommand = 'command';
+
+        $expected = json_encode([
+            'job' => $testJob,
+            'command' => $testCommand
+        ]);
+
+        $this->commandMock
+            ->expects($this->once())
+            ->method('jsonSerialize')
+            ->willReturn($testCommand);
+
+        $this->beanieJobMock
+            ->expects($this->once())
+            ->method('jsonSerialize')
+            ->willReturn($testJob);
+
+
+        $this->assertJsonStringEqualsJsonString($expected, json_encode($this->job));
     }
 }

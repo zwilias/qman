@@ -10,7 +10,6 @@
       "email": "ilias@idlemonkeys.net"
     }
   ],
-  "minimum-stability": "alpha",
   "require": {
     "zwilias/beanie": "~0.1",
     "jeremeamia/superclosure": "^2.1",
