@@ -35,6 +35,11 @@ class WorkerBuilder
      */
     protected $jobFailureStrategy;
 
+    /**
+     * @var ShutdownHandlerInterface
+     */
+    protected $shutdownHandler;
+
     public function __construct()
     {
         $this->logger = new NullLogger();
@@ -42,6 +47,7 @@ class WorkerBuilder
         $this->eventLoop = new EventLoop($this->logger);
         $this->commandSerializer = new GenericCommandSerializer();
         $this->jobFailureStrategy = new GenericJobFailureStrategy($this->qManConfig, $this->logger);
+        $this->shutdownHandler = new ErrorHandler();
     }
 
     /**
@@ -100,6 +106,12 @@ class WorkerBuilder
         return $this;
     }
 
+    public function withShutdownHandler(ShutdownHandlerInterface $shutdownHandler)
+    {
+        $this->shutdownHandler = $shutdownHandler;
+        return $this;
+    }
+
     /**
      * @param Beanie $beanie
      * @return array
@@ -112,6 +124,7 @@ class WorkerBuilder
             $this->eventLoop,
             $this->commandSerializer,
             $this->jobFailureStrategy,
+            $this->shutdownHandler,
             $this->logger
         ];
     }

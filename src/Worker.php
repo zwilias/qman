@@ -37,11 +37,17 @@ class Worker implements LoggerAwareInterface
     protected $jobFailureStrategy;
 
     /**
+     * @var ShutdownHandlerInterface
+     */
+    protected $shutdownHandler;
+
+    /**
      * @param Beanie $beanie
      * @param QManConfig $config
      * @param EventLoop $eventLoop
      * @param CommandSerializerInterface $commandSerializer
      * @param JobFailureStrategyInterface $jobFailureStrategy
+     * @param ShutdownHandlerInterface $shutdownHandler
      * @param LoggerInterface $logger
      */
     public function __construct(
@@ -50,6 +56,7 @@ class Worker implements LoggerAwareInterface
         EventLoop $eventLoop,
         CommandSerializerInterface $commandSerializer,
         JobFailureStrategyInterface $jobFailureStrategy,
+        ShutdownHandlerInterface $shutdownHandler,
         LoggerInterface $logger
     ) {
         $this->logger = $logger;
@@ -57,6 +64,7 @@ class Worker implements LoggerAwareInterface
         $this->eventLoop = $eventLoop;
         $this->commandSerializer = $commandSerializer;
         $this->jobFailureStrategy = $jobFailureStrategy;
+        $this->shutdownHandler = $shutdownHandler;
 
         $this->eventLoop->setJobListenerRemovedCallback([$this, 'removedJobListenerCallback']);
         $this->eventLoop->setJobReceivedCallback([$this, 'handleJob']);
@@ -74,11 +82,18 @@ class Worker implements LoggerAwareInterface
 
         $this->registerWatchers($workers);
 
+        register_shutdown_function([$this->shutdownHandler, 'handleShutdown'], $this, $this->logger);
+
         $this->eventLoop->run();
 
         $this->shutdown($workers);
 
         $this->logger->info('Termination sequence complete. I\'ll be back.');
+    }
+
+    public function stop()
+    {
+        $this->eventLoop->stop();
     }
 
     /**

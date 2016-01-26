@@ -36,7 +36,9 @@ $nativeFunctionMock = null;
 $mockedNativeFunctions = [
     'pcntl_sigprocmask',
     'time',
-    'memory_get_usage'
+    'memory_get_usage',
+    'register_shutdown_function',
+    'error_get_last'
 ];
 
 $namespace = __NAMESPACE__;

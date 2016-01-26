@@ -109,4 +109,19 @@ class WorkerBuilderTest extends \PHPUnit_Framework_TestCase
             $this->workerBuilder->getConstructorArguments($this->getBeanieMock())
         );
     }
+
+    public function testBuild_withShutdownHandler()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|ShutdownHandlerInterface $shutdownHandler */
+        $shutdownHandler = $this
+            ->getMockBuilder(ShutdownHandlerInterface::class)
+            ->getMockForAbstractClass();
+
+        $this->workerBuilder->withShutdownHandler($shutdownHandler);
+
+        $this->assertContains(
+            $shutdownHandler,
+            $this->workerBuilder->getConstructorArguments($this->getBeanieMock())
+        );
+    }
 }

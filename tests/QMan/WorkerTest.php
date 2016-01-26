@@ -122,11 +122,44 @@ class WorkerTest extends NativeFunctionStub_TestCase
             ->method('run')
             ->willReturnSelf();
 
+        $nativeFunctions = $this->getNativeFunctionMock(['register_shutdown_function']);
+
+        $nativeFunctions
+            ->expects($this->once())
+            ->method('register_shutdown_function')
+            ->with($this->callback(function ($arg) {
+                return is_callable($arg);
+            }));
+
 
         $worker = (new WorkerBuilder())
             ->withEventLoop($eventLoopMock)
             ->build($beanieMock);
         $worker->run();
+    }
+
+    public function testStop_stopsEventLoop()
+    {
+        /** @var \PHPUnit_Framework_MockObject_MockObject|\QMan\EventLoop $eventLoopMock */
+        $eventLoopMock = $this
+            ->getMockBuilder(EventLoop::class)
+            ->setMethods(['stop'])
+            ->disableOriginalConstructor()
+            ->getMock();
+
+        $eventLoopMock
+            ->expects($this->once())
+            ->method('stop');
+
+        /** @var \PHPUnit_Framework_MockObject_MockObject|Beanie $beanieMock */
+        $beanieMock = $this
+            ->getMockBuilder(Beanie::class)
+            ->disableOriginalConstructor()
+            ->getMock();
+
+
+        $worker = (new WorkerBuilder())->withEventLoop($eventLoopMock)->build($beanieMock);
+        $worker->stop();
     }
 
     public function testRemovedJobListenerCallback_schedulesReconnection()
