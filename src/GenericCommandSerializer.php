@@ -8,6 +8,12 @@ class GenericCommandSerializer extends AbstractCommandSerializer
 {
     const TYPE_CLOSURE = 'qman.closure';
 
+    const MESSAGE_NOT_A_STRING = 'Failed to register Command class \'%2$s\': type \'%1$s\' is not a string';
+    const MESSAGE_NO_SUCH_CLASS = 'Failed to register Command class \'%2$s\': class does not exist';
+    const MESSAGE_NOT_A_COMMAND = 'Failed to register Command class \'%2$s\': class does not implement QMan\Command';
+    const MESSAGE_CLASS_ALREADY_MAPPED = 'Failed to register Command class \'%2$s\': class already mapped as type \'%3$s\'';
+    const MESSAGE_TYPE_ALREADY_MAPPED = 'Failed to register Command class \'%2$s\': type \'%1$s\' already mapped to Command class \'%3$s\'';
+
     /**
      * @var array<string,string>
      */
@@ -38,7 +44,7 @@ class GenericCommandSerializer extends AbstractCommandSerializer
     /**
      * @param string $type
      * @param string $commandClass
-     * @param bool $force   Bypass all consistency checks
+     * @param bool $force Bypass all consistency checks
      * @return $this
      */
     public function registerCommandType($type, $commandClass, $force = false)
@@ -69,42 +75,39 @@ class GenericCommandSerializer extends AbstractCommandSerializer
     protected function checkCommandType($type, $commandClass)
     {
         if (!is_string($type)) {
-            throw new \InvalidArgumentException(
-                sprintf('Failed to register Command class \'%s\': type \'%s\' is not a string', $commandClass, $type)
-            );
+            throw $this->getTypeMapException(self::MESSAGE_NOT_A_STRING, $type, $commandClass);
         }
 
         if (!class_exists($commandClass)) {
-            throw new \InvalidArgumentException(
-                sprintf('Failed to register Command class \'%s\': class does not exist', $commandClass)
-            );
+            throw $this->getTypeMapException(self::MESSAGE_NO_SUCH_CLASS, $type, $commandClass);
         }
 
         if (!in_array(CommandInterface::class, class_implements($commandClass))) {
-            throw new \InvalidArgumentException(
-                sprintf('Failed to register Command class \'%s\': class does not implement QMan\Command', $commandClass)
-            );
+            throw $this->getTypeMapException(self::MESSAGE_NOT_A_COMMAND, $type, $commandClass);
         }
 
         if (($existingType = array_search($commandClass, $this->typeMap)) !== false) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Failed to register Command class \'%s\': class already mapped as type \'%s\'',
-                    $commandClass,
-                    $existingType
-                )
-            );
+            throw $this->getTypeMapException(self::MESSAGE_CLASS_ALREADY_MAPPED, $type, $commandClass, $existingType);
         }
 
         if (isset($this->typeMap[$type])) {
-            throw new \InvalidArgumentException(
-                sprintf(
-                    'Failed to register Command class \'%s\': type \'%s\' already mapped to Command class \'%s\'',
-                    $commandClass,
-                    $type,
-                    $this->typeMap[$type]
-                )
+            throw $this->getTypeMapException(
+                self::MESSAGE_TYPE_ALREADY_MAPPED, $type, $commandClass, $this->typeMap[$type]
             );
         }
+    }
+
+    /**
+     * @param string $message
+     * @param string $type
+     * @param string $commandClass
+     * @param string|null $extra
+     * @return \InvalidArgumentException
+     */
+    protected function getTypeMapException($message, $type, $commandClass, $extra = null)
+    {
+        return new \InvalidArgumentException(
+            sprintf($message, $type, $commandClass, $extra)
+        );
     }
 }
