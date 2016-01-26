@@ -12,7 +12,7 @@ class ErrorHandler implements ShutdownHandlerInterface
         $error = error_get_last();
         $fatal = E_ERROR | E_USER_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERABLE_ERROR;
 
-        if ($error && $error['type'] & $fatal) {
+        if (! empty($error) && $error['type'] & $fatal) {
             $logger->critical('Stopping worker because fatal error occurred', $error);
             $worker->stop();
         }

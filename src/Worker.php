@@ -72,7 +72,6 @@ class Worker implements LoggerAwareInterface
         $this->beanie = $beanie;
 
         $this->config->lock();
-        $this->jobFailureStrategy = $jobFailureStrategy;
     }
 
     public function run()
